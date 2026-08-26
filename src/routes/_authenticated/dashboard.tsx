@@ -8,6 +8,7 @@ import {
 } from "recharts";
 import { getDashboardData, getAppUsage } from "@/lib/analytics.functions";
 import { listAiReports } from "@/lib/insights.functions";
+import { getMyOrganization } from "@/lib/org.functions";
 import { PageHeader, Card, KpiCard, Badge, SelectField, EmptyState } from "@/components/primitives";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -33,26 +34,41 @@ function DashboardPage() {
   const fetchDashboard = useServerFn(getDashboardData);
   const fetchApps = useServerFn(getAppUsage);
   const fetchReports = useServerFn(listAiReports);
+  const fetchOrganization = useServerFn(getMyOrganization);
   const [days, setDays] = useState("14");
 
-  const { data, error, isLoading } = useQuery({
+  const { data: organization, isLoading: isOrganizationLoading } = useQuery({
+    queryKey: ["my-organization"],
+    queryFn: () => fetchOrganization({ data: undefined }),
+    retry: false,
+  });
+
+  const { data, isLoading } = useQuery({
     queryKey: ["dashboard", days],
     queryFn: () => fetchDashboard({ data: { days: Number(days) } }),
+    enabled: Boolean(organization),
+    retry: false,
   });
   const { data: apps } = useQuery({
     queryKey: ["apps", days],
     queryFn: () => fetchApps({ data: { days: Number(days) } }),
+    enabled: Boolean(organization),
+    retry: false,
   });
   const { data: aiPulse } = useQuery({
     queryKey: ["ai-reports"],
     queryFn: () => fetchReports({ data: undefined }),
+    enabled: Boolean(organization),
+    retry: false,
   });
 
   useEffect(() => {
-    if (error && error.message === "No organization") navigate({ to: "/onboarding" });
-  }, [error, navigate]);
+    if (!isOrganizationLoading && organization === null) {
+      navigate({ to: "/onboarding", replace: true });
+    }
+  }, [isOrganizationLoading, navigate, organization]);
 
-  if (isLoading)
+  if (isOrganizationLoading || organization === null || isLoading)
     return (
       <div className="flex h-96 items-center justify-center">
         <div className="size-6 animate-spin rounded-full border-2 border-border border-t-primary" />
