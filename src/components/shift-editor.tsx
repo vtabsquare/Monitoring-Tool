@@ -32,10 +32,9 @@ export function UserShiftEditor({
 
   useEffect(() => {
     if (!data) return;
-    const source = data.schedule.length ? data.schedule : data.orgDefault;
     setRows(
       DAY_LABELS.map((_, d) => {
-        const row = source.find((r: any) => r.day_of_week === d);
+        const row = data.find((candidate) => candidate.day_of_week === d);
         return {
           day_of_week: d,
           enabled: row?.enabled ?? false,
@@ -52,7 +51,10 @@ export function UserShiftEditor({
       await saveShift({
         data: {
           profile_id: user.id,
-          schedule: rows.map((r) => ({ ...r, start_time: r.start_time + ":00", end_time: r.end_time + ":00" })),
+          shift: {
+            timezone: data?.[0]?.timezone ?? "America/New_York",
+            days: rows,
+          },
         },
       });
       toast.success("Shift schedule saved");
