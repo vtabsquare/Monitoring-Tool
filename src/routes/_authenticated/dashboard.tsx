@@ -43,7 +43,7 @@ function DashboardPage() {
     retry: false,
   });
 
-  const { data, error, isLoading } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["dashboard", days],
     queryFn: () => fetchDashboard({ data: { days: Number(days) } }),
     enabled: Boolean(organization),
