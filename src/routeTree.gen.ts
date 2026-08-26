@@ -10,33 +10,160 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
+import { Route as ApiPublicAgentConfigRouteImport } from './routes/api/public/agent/config'
+import { Route as ApiPublicAgentHeartbeatRouteImport } from './routes/api/public/agent/heartbeat'
+import { Route as ApiPublicAgentRegisterRouteImport } from './routes/api/public/agent/register'
+import { Route as ApiPublicAgentRevokeRouteImport } from './routes/api/public/agent/revoke'
+import { Route as ApiPublicAgentSyncRouteImport } from './routes/api/public/agent/sync'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedUsersRoute = AuthenticatedUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ApiPublicAgentConfigRoute = ApiPublicAgentConfigRouteImport.update({
+  id: '/api/public/agent/config',
+  path: '/api/public/agent/config',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicAgentHeartbeatRoute = ApiPublicAgentHeartbeatRouteImport.update({
+  id: '/api/public/agent/heartbeat',
+  path: '/api/public/agent/heartbeat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicAgentRegisterRoute = ApiPublicAgentRegisterRouteImport.update({
+  id: '/api/public/agent/register',
+  path: '/api/public/agent/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicAgentRevokeRoute = ApiPublicAgentRevokeRouteImport.update({
+  id: '/api/public/agent/revoke',
+  path: '/api/public/agent/revoke',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicAgentSyncRoute = ApiPublicAgentSyncRouteImport.update({
+  id: '/api/public/agent/sync',
+  path: '/api/public/agent/sync',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/onboarding': typeof OnboardingRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/users': typeof AuthenticatedUsersRoute
+  '/api/public/agent/config': typeof ApiPublicAgentConfigRoute
+  '/api/public/agent/heartbeat': typeof ApiPublicAgentHeartbeatRoute
+  '/api/public/agent/register': typeof ApiPublicAgentRegisterRoute
+  '/api/public/agent/revoke': typeof ApiPublicAgentRevokeRoute
+  '/api/public/agent/sync': typeof ApiPublicAgentSyncRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/onboarding': typeof OnboardingRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/users': typeof AuthenticatedUsersRoute
+  '/api/public/agent/config': typeof ApiPublicAgentConfigRoute
+  '/api/public/agent/heartbeat': typeof ApiPublicAgentHeartbeatRoute
+  '/api/public/agent/register': typeof ApiPublicAgentRegisterRoute
+  '/api/public/agent/revoke': typeof ApiPublicAgentRevokeRoute
+  '/api/public/agent/sync': typeof ApiPublicAgentSyncRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/onboarding': typeof OnboardingRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/users': typeof AuthenticatedUsersRoute
+  '/api/public/agent/config': typeof ApiPublicAgentConfigRoute
+  '/api/public/agent/heartbeat': typeof ApiPublicAgentHeartbeatRoute
+  '/api/public/agent/register': typeof ApiPublicAgentRegisterRoute
+  '/api/public/agent/revoke': typeof ApiPublicAgentRevokeRoute
+  '/api/public/agent/sync': typeof ApiPublicAgentSyncRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/onboarding'
+    | '/dashboard'
+    | '/users'
+    | '/api/public/agent/config'
+    | '/api/public/agent/heartbeat'
+    | '/api/public/agent/register'
+    | '/api/public/agent/revoke'
+    | '/api/public/agent/sync'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/onboarding'
+    | '/dashboard'
+    | '/users'
+    | '/api/public/agent/config'
+    | '/api/public/agent/heartbeat'
+    | '/api/public/agent/register'
+    | '/api/public/agent/revoke'
+    | '/api/public/agent/sync'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/onboarding'
+    | '/_authenticated/dashboard'
+    | '/_authenticated/users'
+    | '/api/public/agent/config'
+    | '/api/public/agent/heartbeat'
+    | '/api/public/agent/register'
+    | '/api/public/agent/revoke'
+    | '/api/public/agent/sync'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  OnboardingRoute: typeof OnboardingRoute
+  ApiPublicAgentConfigRoute: typeof ApiPublicAgentConfigRoute
+  ApiPublicAgentHeartbeatRoute: typeof ApiPublicAgentHeartbeatRoute
+  ApiPublicAgentRegisterRoute: typeof ApiPublicAgentRegisterRoute
+  ApiPublicAgentRevokeRoute: typeof ApiPublicAgentRevokeRoute
+  ApiPublicAgentSyncRoute: typeof ApiPublicAgentSyncRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +175,102 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/users': {
+      id: '/_authenticated/users'
+      path: '/users'
+      fullPath: '/users'
+      preLoaderRoute: typeof AuthenticatedUsersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/agent/config': {
+      id: '/api/public/agent/config'
+      path: '/api/public/agent/config'
+      fullPath: '/api/public/agent/config'
+      preLoaderRoute: typeof ApiPublicAgentConfigRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/agent/heartbeat': {
+      id: '/api/public/agent/heartbeat'
+      path: '/api/public/agent/heartbeat'
+      fullPath: '/api/public/agent/heartbeat'
+      preLoaderRoute: typeof ApiPublicAgentHeartbeatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/agent/register': {
+      id: '/api/public/agent/register'
+      path: '/api/public/agent/register'
+      fullPath: '/api/public/agent/register'
+      preLoaderRoute: typeof ApiPublicAgentRegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/agent/revoke': {
+      id: '/api/public/agent/revoke'
+      path: '/api/public/agent/revoke'
+      fullPath: '/api/public/agent/revoke'
+      preLoaderRoute: typeof ApiPublicAgentRevokeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/agent/sync': {
+      id: '/api/public/agent/sync'
+      path: '/api/public/agent/sync'
+      fullPath: '/api/public/agent/sync'
+      preLoaderRoute: typeof ApiPublicAgentSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedUsersRoute: AuthenticatedUsersRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
+  OnboardingRoute: OnboardingRoute,
+  ApiPublicAgentConfigRoute: ApiPublicAgentConfigRoute,
+  ApiPublicAgentHeartbeatRoute: ApiPublicAgentHeartbeatRoute,
+  ApiPublicAgentRegisterRoute: ApiPublicAgentRegisterRoute,
+  ApiPublicAgentRevokeRoute: ApiPublicAgentRevokeRoute,
+  ApiPublicAgentSyncRoute: ApiPublicAgentSyncRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
