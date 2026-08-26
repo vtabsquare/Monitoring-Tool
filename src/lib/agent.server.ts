@@ -50,8 +50,8 @@ export function isWithinShift(schedule: ScheduleRow[], now = new Date()): boolea
     const tzNow = new Date(now.toLocaleString("en-US", { timeZone: row.timezone }));
     const dow = tzNow.getDay();
     const minutes = tzNow.getHours() * 60 + tzNow.getMinutes();
-    const [sh, sm] = row.start_time.split(":").map(Number);
-    const [eh, em] = row.end_time.split(":").map(Number);
+    const [sh = 9, sm = 0] = row.start_time.split(":").map(Number);
+    const [eh = 18, em = 0] = row.end_time.split(":").map(Number);
     const start = sh * 60 + sm;
     const end = eh * 60 + em;
 

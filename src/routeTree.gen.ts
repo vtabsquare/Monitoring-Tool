@@ -10,33 +10,102 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicAgentConfigRouteImport } from './routes/api/public/agent/config'
+import { Route as ApiPublicAgentHeartbeatRouteImport } from './routes/api/public/agent/heartbeat'
+import { Route as ApiPublicAgentRegisterRouteImport } from './routes/api/public/agent/register'
+import { Route as ApiPublicAgentRevokeRouteImport } from './routes/api/public/agent/revoke'
+import { Route as ApiPublicAgentSyncRouteImport } from './routes/api/public/agent/sync'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicAgentConfigRoute = ApiPublicAgentConfigRouteImport.update({
+  id: '/api/public/agent/config',
+  path: '/api/public/agent/config',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicAgentHeartbeatRoute = ApiPublicAgentHeartbeatRouteImport.update({
+  id: '/api/public/agent/heartbeat',
+  path: '/api/public/agent/heartbeat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicAgentRegisterRoute = ApiPublicAgentRegisterRouteImport.update({
+  id: '/api/public/agent/register',
+  path: '/api/public/agent/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicAgentRevokeRoute = ApiPublicAgentRevokeRouteImport.update({
+  id: '/api/public/agent/revoke',
+  path: '/api/public/agent/revoke',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicAgentSyncRoute = ApiPublicAgentSyncRouteImport.update({
+  id: '/api/public/agent/sync',
+  path: '/api/public/agent/sync',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api/public/agent/config': typeof ApiPublicAgentConfigRoute
+  '/api/public/agent/heartbeat': typeof ApiPublicAgentHeartbeatRoute
+  '/api/public/agent/register': typeof ApiPublicAgentRegisterRoute
+  '/api/public/agent/revoke': typeof ApiPublicAgentRevokeRoute
+  '/api/public/agent/sync': typeof ApiPublicAgentSyncRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/public/agent/config': typeof ApiPublicAgentConfigRoute
+  '/api/public/agent/heartbeat': typeof ApiPublicAgentHeartbeatRoute
+  '/api/public/agent/register': typeof ApiPublicAgentRegisterRoute
+  '/api/public/agent/revoke': typeof ApiPublicAgentRevokeRoute
+  '/api/public/agent/sync': typeof ApiPublicAgentSyncRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api/public/agent/config': typeof ApiPublicAgentConfigRoute
+  '/api/public/agent/heartbeat': typeof ApiPublicAgentHeartbeatRoute
+  '/api/public/agent/register': typeof ApiPublicAgentRegisterRoute
+  '/api/public/agent/revoke': typeof ApiPublicAgentRevokeRoute
+  '/api/public/agent/sync': typeof ApiPublicAgentSyncRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/api/public/agent/config'
+    | '/api/public/agent/heartbeat'
+    | '/api/public/agent/register'
+    | '/api/public/agent/revoke'
+    | '/api/public/agent/sync'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/api/public/agent/config'
+    | '/api/public/agent/heartbeat'
+    | '/api/public/agent/register'
+    | '/api/public/agent/revoke'
+    | '/api/public/agent/sync'
+  id:
+    | '__root__'
+    | '/'
+    | '/api/public/agent/config'
+    | '/api/public/agent/heartbeat'
+    | '/api/public/agent/register'
+    | '/api/public/agent/revoke'
+    | '/api/public/agent/sync'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiPublicAgentConfigRoute: typeof ApiPublicAgentConfigRoute
+  ApiPublicAgentHeartbeatRoute: typeof ApiPublicAgentHeartbeatRoute
+  ApiPublicAgentRegisterRoute: typeof ApiPublicAgentRegisterRoute
+  ApiPublicAgentRevokeRoute: typeof ApiPublicAgentRevokeRoute
+  ApiPublicAgentSyncRoute: typeof ApiPublicAgentSyncRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +117,51 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/agent/config': {
+      id: '/api/public/agent/config'
+      path: '/api/public/agent/config'
+      fullPath: '/api/public/agent/config'
+      preLoaderRoute: typeof ApiPublicAgentConfigRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/agent/heartbeat': {
+      id: '/api/public/agent/heartbeat'
+      path: '/api/public/agent/heartbeat'
+      fullPath: '/api/public/agent/heartbeat'
+      preLoaderRoute: typeof ApiPublicAgentHeartbeatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/agent/register': {
+      id: '/api/public/agent/register'
+      path: '/api/public/agent/register'
+      fullPath: '/api/public/agent/register'
+      preLoaderRoute: typeof ApiPublicAgentRegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/agent/revoke': {
+      id: '/api/public/agent/revoke'
+      path: '/api/public/agent/revoke'
+      fullPath: '/api/public/agent/revoke'
+      preLoaderRoute: typeof ApiPublicAgentRevokeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/agent/sync': {
+      id: '/api/public/agent/sync'
+      path: '/api/public/agent/sync'
+      fullPath: '/api/public/agent/sync'
+      preLoaderRoute: typeof ApiPublicAgentSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiPublicAgentConfigRoute: ApiPublicAgentConfigRoute,
+  ApiPublicAgentHeartbeatRoute: ApiPublicAgentHeartbeatRoute,
+  ApiPublicAgentRegisterRoute: ApiPublicAgentRegisterRoute,
+  ApiPublicAgentRevokeRoute: ApiPublicAgentRevokeRoute,
+  ApiPublicAgentSyncRoute: ApiPublicAgentSyncRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
