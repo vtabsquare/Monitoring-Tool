@@ -6,7 +6,8 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar, PieChart, Pie, Cell, Legend,
 } from "recharts";
-import { getDashboardData } from "@/lib/analytics.functions";
+import { getDashboardData, getAppUsage } from "@/lib/analytics.functions";
+import { listAiReports } from "@/lib/insights.functions";
 import { PageHeader, Card, KpiCard, Badge, SelectField, EmptyState } from "@/components/primitives";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -30,12 +31,21 @@ const CATEGORY_COLORS = ["#2EE59D", "#6EA8FE", "#FF6B6B"];
 function DashboardPage() {
   const navigate = useNavigate();
   const fetchDashboard = useServerFn(getDashboardData);
-  const [days, setDays] = useState("7");
-  const [dept, setDept] = useState("");
+  const fetchApps = useServerFn(getAppUsage);
+  const fetchReports = useServerFn(listAiReports);
+  const [days, setDays] = useState("14");
 
   const { data, error, isLoading } = useQuery({
-    queryKey: ["dashboard", days, dept],
-    queryFn: () => fetchDashboard({ data: { days: Number(days), departmentId: dept || undefined } }),
+    queryKey: ["dashboard", days],
+    queryFn: () => fetchDashboard({ data: { days: Number(days) } }),
+  });
+  const { data: apps } = useQuery({
+    queryKey: ["apps", days],
+    queryFn: () => fetchApps({ data: { days: Number(days) } }),
+  });
+  const { data: aiPulse } = useQuery({
+    queryKey: ["ai-reports"],
+    queryFn: () => fetchReports({ data: undefined }),
   });
 
   useEffect(() => {
@@ -56,41 +66,53 @@ function DashboardPage() {
       />
     );
 
-  const { org, kpis, departments, trend, categorySplit, topApps, aiPulse } = data;
-  const deptOptions = [
-    { value: "", label: "All departments" },
-    ...departments.map((d) => ({ value: d.id, label: d.name })),
-  ];
+  const { org, kpis, trend, userPerformance } = data;
+
+  // Department comparison derived from per-user aggregates
+  const deptMap = new Map<string, { name: string; prod: number; focus: number; members: number }>();
+  for (const u of userPerformance) {
+    const d = deptMap.get(u.department) ?? { name: u.department, prod: 0, focus: 0, members: 0 };
+    d.prod += u.avg_productivity;
+    d.focus += u.avg_focus;
+    d.members += 1;
+    deptMap.set(u.department, d);
+  }
+  const departments = [...deptMap.values()].map((d) => ({
+    name: d.name,
+    avgProductivity: Math.round(d.prod / d.members),
+    avgFocus: Math.round(d.focus / d.members),
+  }));
+
   const pie = [
-    { name: "Productive", value: categorySplit.productive },
-    { name: "Neutral", value: categorySplit.neutral },
-    { name: "Distracted", value: categorySplit.distracted },
+    { name: "Productive", value: Math.round(trend.reduce((s, t) => s + t.productive_hours, 0)) },
+    { name: "Distracted", value: Math.round(trend.reduce((s, t) => s + t.distracted_hours, 0)) },
+    { name: "Idle", value: Math.round(trend.reduce((s, t) => s + t.idle_hours, 0)) },
   ];
   const pieTotal = pie.reduce((s, p) => s + p.value, 0);
+
+  const topApps = (apps ?? []).slice(0, 8).map((a) => ({
+    app_name: a.app_name,
+    hours: Math.round((a.total_seconds / 3600) * 10) / 10,
+  }));
 
   return (
     <div>
       <PageHeader
         title="Executive Overview"
         description={`${org.name} · monitoring during configured shifts only`}
-        actions={
-          <>
-            <SelectField value={dept} onChange={setDept} options={deptOptions} />
-            <SelectField value={days} onChange={setDays} options={RANGE_OPTIONS} />
-          </>
-        }
+        actions={<SelectField value={days} onChange={setDays} options={RANGE_OPTIONS} />}
       />
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
-        <KpiCard label="Avg productivity" value={`${kpis.avgProductivity}%`} />
-        <KpiCard label="Avg focus" value={`${kpis.avgFocus}%`} />
-        <KpiCard label="Active users" value={String(kpis.activeUsers)} sub={`of ${kpis.totalUsers} total`} />
-        <KpiCard label="Devices live" value={String(kpis.devicesLive)} sub={`of ${kpis.devicesTotal} enrolled`} />
-        <KpiCard label="Focus time" value={`${kpis.focusHours}h`} />
+        <KpiCard label="Org productivity" value={`${kpis.org_productivity}%`} />
+        <KpiCard label="Focus score" value={`${kpis.focus_score}%`} />
+        <KpiCard label="Active users" value={String(kpis.active_users)} sub={`of ${kpis.total_users} total`} />
+        <KpiCard label="Devices live" value={String(kpis.devices_online)} sub={`of ${kpis.total_devices} enrolled`} />
+        <KpiCard label="Focus time today" value={`${Math.round(kpis.focus_seconds_today / 360) / 10}h`} />
         <KpiCard
           label="Pending invites"
-          value={String(kpis.pendingInvites)}
-          sub={kpis.devicesPaused > 0 ? `${kpis.devicesPaused} device(s) paused` : "Fleet nominal"}
+          value={String(kpis.pending_invites)}
+          sub={`${kpis.distracted_ratio}% distracted`}
         />
       </div>
 
@@ -126,7 +148,7 @@ function DashboardPage() {
                 <PieChart>
                   <Pie data={pie} dataKey="value" innerRadius={60} outerRadius={90} strokeWidth={0}>
                     {pie.map((_, i) => (
-                      <Cell key={i} fill={CATEGORY_COLORS[i]} />
+                      <Cell key={i} fill={CATEGORY_COLORS[i % CATEGORY_COLORS.length]} />
                     ))}
                   </Pie>
                   <Legend
@@ -148,7 +170,7 @@ function DashboardPage() {
           <h3 className="text-sm font-semibold text-foreground">Department comparison</h3>
           <div className="mt-4 h-64">
             <ResponsiveContainer>
-              <BarChart data={departments.filter((d) => d.memberCount > 0)} margin={{ left: -20, right: 8, top: 8 }}>
+              <BarChart data={departments} margin={{ left: -20, right: 8, top: 8 }}>
                 <CartesianGrid stroke="#1F242B" vertical={false} />
                 <XAxis dataKey="name" tick={{ fontSize: 10, fill: "#6B7280" }} tickLine={false} axisLine={false} />
                 <YAxis tick={{ fontSize: 10, fill: "#6B7280" }} tickLine={false} axisLine={false} domain={[0, 100]} />
@@ -168,24 +190,19 @@ function DashboardPage() {
           <p className="text-xs text-muted-foreground">
             Interpreted from aggregated daily summaries — never raw activity
           </p>
-          {aiPulse.length === 0 ? (
+          {!aiPulse?.length ? (
             <div className="mt-4">
-              <EmptyState title="No insights yet" hint="Insights are generated from aggregated summaries." />
+              <EmptyState title="No insights yet" hint="Generate one from the AI Insights page." />
             </div>
           ) : (
             <div className="mt-4 space-y-3">
-              {aiPulse.map((r) => (
+              {aiPulse.slice(0, 3).map((r: any) => (
                 <div key={r.id} className="rounded-lg border border-border bg-muted/30 p-4">
                   <div className="flex items-center justify-between gap-3">
                     <p className="text-sm font-medium text-foreground">{r.title}</p>
                     <Badge tone={r.scope === "org" ? "primary" : "info"}>{r.scope}</Badge>
                   </div>
-                  <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{r.summary}</p>
-                  {r.recommendations[0] && (
-                    <p className="mt-2 border-l-2 border-primary/50 pl-3 text-xs text-foreground/80">
-                      {r.recommendations[0]}
-                    </p>
-                  )}
+                  <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{r.summary}</p>
                 </div>
               ))}
             </div>
