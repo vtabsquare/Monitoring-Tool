@@ -1,10 +1,20 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+export interface Org {
+  id: string;
+  name: string;
+  slug: string;
+  timezone: string;
+  heartbeat_interval_seconds: number;
+  data_retention_days: number;
+  created_at: string;
+}
+
 /** Resolve the organization the signed-in user admins. Throws if none. */
 export async function requireAdminOrg(
   supabase: SupabaseClient,
   userId: string,
-): Promise<{ orgId: string; org: Record<string, unknown> }> {
+): Promise<{ orgId: string; org: Org }> {
   const { data: role, error } = await supabase
     .from("user_roles")
     .select("org_id, organizations(*)")
