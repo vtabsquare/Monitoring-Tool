@@ -14,7 +14,8 @@ export async function requireAdminOrg(
     .maybeSingle();
   if (error) throw new Error(error.message);
   if (!role) throw new Error("No organization. Complete onboarding first.");
-  return { orgId: role.org_id as string, org: role.organizations as Record<string, unknown> };
+  const org = role.organizations as unknown as Record<string, unknown>;
+  return { orgId: role.org_id as string, org };
 }
 
 /** Find the org the user admins, or null (used by onboarding). */
@@ -27,7 +28,8 @@ export async function findAdminOrg(supabase: SupabaseClient, userId: string) {
     .limit(1)
     .maybeSingle();
   if (!data) return null;
-  return { orgId: data.org_id as string, org: data.organizations as Record<string, unknown> };
+  const org = data.organizations as unknown as Record<string, unknown>;
+  return { orgId: data.org_id as string, org };
 }
 
 export async function audit(
