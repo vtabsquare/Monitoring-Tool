@@ -32,12 +32,36 @@ function UsersPage() {
   const [shiftUser, setShiftUser] = useState<{ id: string; name: string } | null>(null);
   const [form, setForm] = useState({ full_name: "", email: "", job_role: "", department_id: "" });
 
+  const departments = Array.from(
+    new Map(
+      (data ?? []).flatMap((user) =>
+        user.department_id && user.departments
+          ? [[user.department_id, { id: user.department_id, name: user.departments.name }] as const]
+          : [],
+      ),
+    ).values(),
+  );
+
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["users"] });
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
     try {
-      await runAddUser({ data: { ...form, department_id: form.department_id || undefined } });
+      await runAddUser({
+        data: {
+          ...form,
+          department_id: form.department_id || null,
+          shift: {
+            timezone: "America/New_York",
+            days: Array.from({ length: 7 }, (_, day_of_week) => ({
+              day_of_week,
+              enabled: day_of_week > 0 && day_of_week < 6,
+              start_time: "09:00",
+              end_time: "18:00",
+            })),
+          },
+        },
+      });
       toast.success("Invitation sent — the desktop agent download is on its way");
       setAddOpen(false);
       setForm({ full_name: "", email: "", job_role: "", department_id: "" });
@@ -47,9 +71,9 @@ function UsersPage() {
     }
   }
 
-  async function handleStatus(profile_id: string, status: "active" | "suspended" | "disabled") {
+  async function handleStatus(id: string, status: "active" | "disabled") {
     try {
-      await runUpdateUser({ data: { profile_id, status } });
+      await runUpdateUser({ data: { id, status } });
       toast.success(`User ${status}`);
       invalidate();
     } catch (err) {
@@ -75,7 +99,7 @@ function UsersPage() {
       <Card className="p-0">
         {isLoading ? (
           <div className="p-8 text-center text-sm text-muted-foreground">Loading…</div>
-        ) : !data?.users.length ? (
+        ) : !data?.length ? (
           <EmptyState title="No users yet" hint="Add your first team member to start monitoring." />
         ) : (
           <table className="w-full text-sm">
@@ -90,7 +114,7 @@ function UsersPage() {
               </tr>
             </thead>
             <tbody>
-              {data.users.map((u: any) => (
+              {data.map((u) => (
                 <tr key={u.id} className="border-b border-border/50 last:border-0 hover:bg-muted/20">
                   <td className="px-6 py-3">
                     <p className="font-medium text-foreground">{u.full_name}</p>
@@ -99,7 +123,7 @@ function UsersPage() {
                   <td className="px-6 py-3 text-muted-foreground">{u.job_role || "—"}</td>
                   <td className="px-6 py-3 text-muted-foreground">{u.departments?.name ?? "—"}</td>
                   <td className="px-6 py-3 text-muted-foreground">
-                    {u.schedule?.length ? "Custom" : "Org default"}
+                    Org default
                   </td>
                   <td className="px-6 py-3">
                     <Badge tone={statusTone(u.status)}>{u.status}</Badge>
@@ -127,13 +151,13 @@ function UsersPage() {
                       )}
                       {u.status === "active" && (
                         <button
-                          onClick={() => handleStatus(u.id, "suspended")}
+                          onClick={() => handleStatus(u.id, "disabled")}
                           className="rounded border border-border px-2 py-1 text-warning hover:bg-muted"
                         >
                           Suspend
                         </button>
                       )}
-                      {u.status === "suspended" && (
+                      {u.status === "disabled" && (
                         <button
                           onClick={() => handleStatus(u.id, "active")}
                           className="rounded border border-border px-2 py-1 text-success hover:bg-muted"
@@ -184,7 +208,7 @@ function UsersPage() {
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none"
               >
                 <option value="">None</option>
-                {data?.departments.map((d: any) => (
+                {departments.map((d) => (
                   <option key={d.id} value={d.id}>
                     {d.name}
                   </option>
