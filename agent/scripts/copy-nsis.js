@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 function copyInstaller() {
-  const buildOutputDir = 'C:/Users/moham/agent-build-output';
+  const buildOutputDir = path.join(__dirname, '../release/build');
   const targetDir = path.join(__dirname, '../release/installer');
   const targetPath = path.join(targetDir, 'FlowFocusDesktopAgentSetup.exe');
 

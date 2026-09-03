@@ -34,7 +34,18 @@ function formatDuration(totalSeconds: number): string {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
-function getCategoryBadge(row: any) {
+interface LiveWorkRow {
+  id?: string | null;
+  profile_id?: string | null;
+  employee_name?: string | null;
+  is_online?: boolean | null;
+  app_name?: string | null;
+  category?: string | null;
+  started_at?: string | null;
+  duration_seconds?: number | null;
+}
+
+function getCategoryBadge(row: LiveWorkRow) {
   if (!row.is_online || row.category === "offline") {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-md border border-destructive/30 bg-destructive/10 px-2 py-0.5 text-xs font-semibold text-destructive">
@@ -169,7 +180,9 @@ function DashboardPage() {
         </div>
 
         {isLiveLoading ? (
-          <div className="p-8 text-center text-sm text-muted-foreground">Loading live work data…</div>
+          <div className="p-8 text-center text-sm text-muted-foreground">
+            Loading live work data…
+          </div>
         ) : !liveRows?.length ? (
           <EmptyState
             title="No employee profiles found"
@@ -187,7 +200,7 @@ function DashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {liveRows.map((row: any) => {
+                {liveRows.map((row: LiveWorkRow) => {
                   const startedMs = row.started_at ? new Date(row.started_at).getTime() : null;
                   const elapsed = startedMs
                     ? Math.max(
@@ -207,9 +220,7 @@ function DashboardPage() {
                       <td className="px-6 py-4 font-medium text-foreground whitespace-nowrap">
                         {row.is_online ? row.app_name : "—"}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {getCategoryBadge(row)}
-                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">{getCategoryBadge(row)}</td>
                       <td className="px-6 py-4 text-right font-mono font-medium text-foreground whitespace-nowrap">
                         {row.is_online && elapsed !== null ? formatDuration(elapsed) : "—"}
                       </td>

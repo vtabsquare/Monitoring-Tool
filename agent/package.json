@@ -18,7 +18,7 @@
     "appId": "com.vtabsquare.flowfocusagent",
     "productName": "Flow Focus Desktop Agent",
     "directories": {
-      "output": "C:/Users/moham/agent-build-output"
+      "output": "release/build"
     },
     "files": [
       "dist/**/*"
