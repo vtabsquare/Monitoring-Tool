@@ -26,10 +26,8 @@ const NAV: {
     group: "Overview",
     items: [
       { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-      { to: "/users", label: "Users", icon: Users },
       { to: "/devices", label: "Devices", icon: Monitor },
       { to: "/activity", label: "Activity", icon: Activity },
-      { to: "/applications", label: "Applications", icon: AppWindow },
       { to: "/focus", label: "Focus", icon: Crosshair },
     ],
   },
@@ -37,7 +35,6 @@ const NAV: {
     group: "Intelligence",
     items: [
       { to: "/insights", label: "AI Insights", icon: Sparkles },
-      { to: "/reports", label: "Reports", icon: FileBarChart },
     ],
   },
   {
@@ -45,7 +42,6 @@ const NAV: {
     items: [
       { to: "/organization", label: "Organization", icon: Building2 },
       { to: "/settings", label: "Settings", icon: Settings },
-      { to: "/audit-logs", label: "Audit Logs", icon: ScrollText },
     ],
   },
 ];

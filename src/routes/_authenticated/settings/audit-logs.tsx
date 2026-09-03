@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { listAuditLogs } from "@/lib/users.functions";
 import { PageHeader, Card, EmptyState } from "@/components/primitives";
 
-export const Route = createFileRoute("/_authenticated/audit-logs")({
+export const Route = createFileRoute("/_authenticated/settings/audit-logs")({
   head: () => ({ meta: [{ title: "Audit Logs — Aetherium" }] }),
   component: AuditLogsPage,
 });

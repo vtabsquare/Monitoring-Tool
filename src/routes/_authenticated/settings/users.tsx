@@ -9,7 +9,7 @@ import { PageHeader, Card, Badge, EmptyState } from "@/components/primitives";
 import { UserShiftEditor } from "@/components/shift-editor";
 import { Copy, Check, Edit2, Trash2, Mail, Download } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/users")({
+export const Route = createFileRoute("/_authenticated/settings/users")({
   head: () => ({ meta: [{ title: "Users — Aetherium" }] }),
   component: UsersPage,
 });
@@ -86,7 +86,7 @@ function UsersPage() {
           ...addForm,
           department_id: addForm.department_id || null,
           shift: {
-            timezone: "Asia/Kolkata", // Indian Standard Time (IST)
+            timezone: orgData?.timezone ?? "Asia/Kolkata",
             days: Array.from({ length: 7 }, (_, day_of_week) => ({
               day_of_week,
               enabled: true,
@@ -210,7 +210,7 @@ function UsersPage() {
                     )}
                   </td>
                   <td className="px-6 py-3 text-xs font-mono text-muted-foreground">
-                    IST (UTC+05:30)
+                    {orgData?.timezone ?? "Asia/Kolkata"}
                   </td>
                   <td className="px-6 py-3">
                     <Badge tone={statusTone(u.status)}>{u.status}</Badge>

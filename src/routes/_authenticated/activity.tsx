@@ -3,10 +3,23 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { getActivitySessions } from "@/lib/analytics.functions";
+import { getActivitySessions, getAppUsage } from "@/lib/analytics.functions";
 import { listUsers } from "@/lib/users.functions";
 import { PageHeader, Card, Badge, EmptyState } from "@/components/primitives";
-import { User, Monitor, Clock, RefreshCw, Check, AlertTriangle } from "lucide-react";
+import { User, Monitor, Clock, RefreshCw, Check, AlertTriangle, AppWindow, Activity } from "lucide-react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+} from "recharts";
 
 export const Route = createFileRoute("/_authenticated/activity")({
   head: () => ({ meta: [{ title: "Activity Timeline — Aetherium" }] }),
@@ -19,6 +32,7 @@ function categoryTone(cat: string) {
 
 function ActivityPage() {
   const fetchActivity = useServerFn(getActivitySessions);
+  const fetchApps = useServerFn(getAppUsage);
   const fetchUsers = useServerFn(listUsers);
 
   const { data: usersData, isLoading: isUsersLoading } = useQuery({
@@ -26,19 +40,17 @@ function ActivityPage() {
     queryFn: () => fetchUsers({ data: undefined }),
   });
 
-  // Default selection must always be "all" and period "1" (Last 24 Hours)
+  const [activeTab, setActiveTab] = useState<"activity" | "applications">("activity");
   const [selectedUserId, setSelectedUserId] = useState<string>("all");
   const [selectedDeviceId, setSelectedDeviceId] = useState<string>("all");
   const [daysRange, setDaysRange] = useState<number>(1);
 
-  // Live Sync Status State
   const [lastSyncedTime, setLastSyncedTime] = useState<string | null>(null);
   const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "synced" | "error">("idle");
 
   const activeUser = selectedUserId !== "all" ? usersData?.find((u: any) => u.id === selectedUserId) : null;
   const userDevices = activeUser?.devices ?? [];
 
-  // Reset device selection when switching users if selected device doesn't belong to new user
   useEffect(() => {
     if (selectedUserId === "all") {
       setSelectedDeviceId("all");
@@ -51,7 +63,7 @@ function ActivityPage() {
     data: sessionsData,
     isLoading: isSessionsLoading,
     isRefetching,
-    refetch,
+    refetch: refetchSessions,
   } = useQuery({
     queryKey: ["activity-sessions", selectedUserId, selectedDeviceId, daysRange],
     queryFn: () =>
@@ -64,46 +76,77 @@ function ActivityPage() {
       }),
   });
 
+  const {
+    data: appData,
+    isLoading: isAppsLoading,
+    refetch: refetchApps,
+  } = useQuery({
+    queryKey: ["app-usage", selectedUserId, daysRange],
+    queryFn: () =>
+      fetchApps({
+        data: {
+          profile_id: selectedUserId !== "all" ? selectedUserId : undefined,
+          days: daysRange,
+        },
+      }),
+  });
+
   async function handleLiveSync() {
     setSyncStatus("syncing");
     try {
-      await refetch();
+      await Promise.all([refetchSessions(), refetchApps()]);
       setSyncStatus("synced");
       setLastSyncedTime("Just now");
-      setTimeout(() => {
-        setSyncStatus("idle");
-      }, 4000);
+      setTimeout(() => setSyncStatus("idle"), 4000);
     } catch (err) {
       setSyncStatus("error");
       toast.error("Synchronization failed. Please try again.");
-      setTimeout(() => {
-        setSyncStatus("idle");
-      }, 4000);
+      setTimeout(() => setSyncStatus("idle"), 4000);
     }
   }
 
-  const totalProductiveSeconds = (sessionsData ?? []).reduce(
-    (acc: number, s: any) => (s.category === "productive" ? acc + (s.duration_seconds || 0) : acc),
-    0,
-  );
+  // Calculate Chart Data
+  let productiveSec = 0;
+  let distractedSec = 0;
+  let idleSec = 0;
+
+  (sessionsData ?? []).forEach((s: any) => {
+    const dur = s.duration_seconds || 0;
+    if (s.is_idle) {
+      idleSec += dur;
+    } else if (s.category === "productive") {
+      productiveSec += dur;
+    } else if (s.category === "distracted") {
+      distractedSec += dur;
+    }
+  });
+
+  const pieData = [
+    { name: "Productive", value: productiveSec, color: "#10b981" },
+    { name: "Non-Productive", value: distractedSec, color: "#ef4444" },
+    { name: "Idle", value: idleSec, color: "#f59e0b" },
+  ].filter((d) => d.value > 0);
+
+  const barData = (appData ?? [])
+    .slice(0, 7)
+    .map((app: any) => ({
+      name: app.app_name,
+      Hours: Number((app.total_seconds / 3600).toFixed(2)),
+    }));
 
   const selectedDeviceObj = userDevices.find((d: any) => d.id === selectedDeviceId);
 
   return (
     <div className="space-y-6">
-      {/* Page Header & Live Sync Action */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <PageHeader
-          title="Activity Log & Timeline"
-          description="Application-level activity telemetry captured during active shift hours."
+          title="Activity & Applications"
+          description="Application-level activity telemetry and usage analytics."
         />
 
-        {/* Live Sync Control */}
         <div className="flex items-center gap-3">
           {lastSyncedTime && (
-            <span className="text-xs text-muted-foreground font-medium">
-              Last synced: {lastSyncedTime}
-            </span>
+            <span className="text-xs text-muted-foreground font-medium">Last synced: {lastSyncedTime}</span>
           )}
           <button
             onClick={handleLiveSync}
@@ -135,16 +178,12 @@ function ActivityPage() {
         </div>
       </div>
 
-      {/* Filter & Selection Control Bar */}
       <Card className="p-4 bg-card/80 border-border/80 backdrop-blur-sm shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-4">
-            {/* User Selector Dropdown (Default: All Users) */}
             <div className="flex items-center gap-2">
               <User className="size-4 text-primary" />
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                User:
-              </label>
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">User:</label>
               {isUsersLoading ? (
                 <div className="h-8 w-36 animate-pulse rounded bg-muted" />
               ) : (
@@ -163,12 +202,9 @@ function ActivityPage() {
               )}
             </div>
 
-            {/* Workstation / Device Selector Dropdown */}
             <div className="flex items-center gap-2">
               <Monitor className="size-4 text-primary" />
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Workstation:
-              </label>
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Workstation:</label>
               <select
                 value={selectedDeviceId}
                 onChange={(e) => setSelectedDeviceId(e.target.value)}
@@ -190,12 +226,9 @@ function ActivityPage() {
               </select>
             </div>
 
-            {/* Time Window Selector (Default: Last 24 Hours) */}
             <div className="flex items-center gap-2">
               <Clock className="size-4 text-primary" />
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Period:
-              </label>
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Period:</label>
               <select
                 value={daysRange}
                 onChange={(e) => setDaysRange(Number(e.target.value))}
@@ -209,13 +242,10 @@ function ActivityPage() {
             </div>
           </div>
 
-          {/* Telemetry Summary Badge */}
           <div className="flex items-center gap-3 text-xs bg-muted/30 px-3 py-1.5 rounded-lg border border-border/50">
             <div>
               <span className="text-muted-foreground">Scope: </span>
-              <span className="font-semibold text-foreground">
-                {activeUser ? activeUser.full_name : "All Users"}
-              </span>
+              <span className="font-semibold text-foreground">{activeUser ? activeUser.full_name : "All Users"}</span>
             </div>
             <div className="h-3 w-px bg-border" />
             <div>
@@ -228,69 +258,238 @@ function ActivityPage() {
                     : "All Workstations"}
               </span>
             </div>
-            <div className="h-3 w-px bg-border" />
-            <div>
-              <span className="text-muted-foreground">Productive Focus: </span>
-              <span className="font-semibold text-success">
-                {Math.round(totalProductiveSeconds / 60)} mins
-              </span>
-            </div>
           </div>
         </div>
       </Card>
 
-      {/* Application-Level Activity Log Table */}
-      <Card className="p-0 overflow-hidden">
-        {isSessionsLoading || isUsersLoading ? (
-          <div className="p-8 text-center text-sm text-muted-foreground">
-            Loading activity logs…
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="p-6 lg:col-span-2 flex flex-col">
+          <h3 className="text-sm font-semibold mb-6 flex items-center gap-2">
+            <AppWindow className="size-4 text-primary" />
+            Top Application Usage
+          </h3>
+          <div className="flex-1 min-h-[250px]">
+            {isAppsLoading ? (
+              <div className="h-full w-full flex items-center justify-center text-muted-foreground text-sm">
+                Loading chart...
+              </div>
+            ) : barData.length === 0 ? (
+              <div className="h-full w-full flex items-center justify-center text-muted-foreground text-sm">
+                No data available
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={barData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorHours" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={1} />
+                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.8} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" />
+                  <XAxis
+                    dataKey="name"
+                    stroke="#94a3b8"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(val) => (val.length > 10 ? val.substring(0, 10) + "..." : val)}
+                  />
+                  <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
+                  <Tooltip
+                    cursor={{ fill: "#1e293b" }}
+                    contentStyle={{
+                      backgroundColor: "#0f172a",
+                      borderColor: "#334155",
+                      borderRadius: "8px",
+                      fontSize: "12px",
+                      color: "#f8fafc",
+                    }}
+                    itemStyle={{ color: "#f8fafc" }}
+                  />
+                  <Bar
+                    dataKey="Hours"
+                    fill="url(#colorHours)"
+                    radius={[4, 4, 0, 0]}
+                    animationDuration={1500}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </div>
-        ) : !sessionsData?.length ? (
+        </Card>
+
+        <Card className="p-6 flex flex-col">
+          <h3 className="text-sm font-semibold mb-6 flex items-center gap-2">
+            <Activity className="size-4 text-primary" />
+            Time Allocation
+          </h3>
+          <div className="flex-1 min-h-[250px]">
+            {isSessionsLoading ? (
+              <div className="h-full w-full flex items-center justify-center text-muted-foreground text-sm">
+                Loading chart...
+              </div>
+            ) : pieData.length === 0 ? (
+              <div className="h-full w-full flex items-center justify-center text-muted-foreground text-sm">
+                No data available
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#0f172a",
+                      borderColor: "#334155",
+                      borderRadius: "8px",
+                      fontSize: "12px",
+                      color: "#f8fafc",
+                    }}
+                    itemStyle={{ color: "#f8fafc" }}
+                    formatter={(value: number) => [
+                      `${Math.floor(value / 3600)}h ${Math.floor((value % 3600) / 60)}m`,
+                      "Duration",
+                    ]}
+                  />
+                  <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: "12px" }} />
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="45%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={2}
+                    dataKey="value"
+                    animationDuration={1500}
+                    stroke="none"
+                  >
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </Card>
+      </div>
+
+      {/* Tabs Switcher */}
+      <div className="flex items-center gap-1 p-1 bg-muted/50 rounded-lg w-fit border border-border">
+        <button
+          onClick={() => setActiveTab("activity")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+            activeTab === "activity"
+              ? "bg-background text-foreground shadow-sm ring-1 ring-border"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted"
+          }`}
+        >
+          <Activity className="size-4" />
+          Activity Timeline
+        </button>
+        <button
+          onClick={() => setActiveTab("applications")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+            activeTab === "applications"
+              ? "bg-background text-foreground shadow-sm ring-1 ring-border"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted"
+          }`}
+        >
+          <AppWindow className="size-4" />
+          Application Usage
+        </button>
+      </div>
+
+      {/* Tables */}
+      <Card className="p-0 overflow-hidden">
+        {activeTab === "activity" ? (
+          isSessionsLoading || isUsersLoading ? (
+            <div className="p-8 text-center text-sm text-muted-foreground">Loading activity logs…</div>
+          ) : !sessionsData?.length ? (
+            <EmptyState
+              title={`No activity sessions in the ${daysRange === 1 ? "last 24 hours" : `last ${daysRange} days`}`}
+              hint={
+                activeUser
+                  ? `No application activity logged for ${activeUser.full_name}. Ensure the desktop agent is active.`
+                  : "Application usage captured by desktop agents will appear here."
+              }
+            />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground bg-muted/40">
+                    <th className="px-6 py-3.5 whitespace-nowrap">Timestamp</th>
+                    <th className="px-6 py-3.5 whitespace-nowrap">User / Device</th>
+                    <th className="px-6 py-3.5 whitespace-nowrap">Application</th>
+                    <th className="px-6 py-3.5 whitespace-nowrap">Classification</th>
+                    <th className="px-6 py-3.5 text-right whitespace-nowrap">Duration</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sessionsData.map((s: any) => (
+                    <tr key={s.id} className="border-b border-border/50 last:border-0 hover:bg-muted/20 transition-colors">
+                      <td className="px-6 py-3.5 text-xs text-muted-foreground font-mono whitespace-nowrap">
+                        {new Date(s.started_at).toLocaleString()}
+                      </td>
+                      <td className="px-6 py-3.5 font-medium text-foreground whitespace-nowrap">
+                        {s.profiles?.full_name ?? "User"}
+                        <p className="text-xs text-muted-foreground">{s.devices?.name ?? "Workstation"}</p>
+                      </td>
+                      <td className="px-6 py-3.5 font-semibold text-foreground whitespace-nowrap">{s.app_name}</td>
+                      <td className="px-6 py-3.5 whitespace-nowrap">
+                        <Badge tone={s.is_idle ? "warning" : categoryTone(s.category)}>
+                          {s.is_idle ? "idle" : s.category}
+                        </Badge>
+                      </td>
+                      <td className="px-6 py-3.5 text-right text-xs font-mono font-medium text-foreground whitespace-nowrap">
+                        {Math.floor((s.duration_seconds || 0) / 60)}m {(s.duration_seconds || 0) % 60}s
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )
+        ) : isAppsLoading ? (
+          <div className="p-8 text-center text-sm text-muted-foreground">Loading application metrics…</div>
+        ) : !appData?.length ? (
           <EmptyState
-            title={`No activity sessions in the ${daysRange === 1 ? "last 24 hours" : `last ${daysRange} days`}`}
-            hint={
-              activeUser
-                ? `No application activity logged for ${activeUser.full_name}. Ensure the desktop agent is active.`
-                : "Application usage captured by desktop agents will appear here."
-            }
+            title={`No application telemetry in the ${daysRange === 1 ? "last 24 hours" : `last ${daysRange} days`}`}
+            hint="Application usage recorded during active shift hours will appear here."
           />
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground bg-muted/40">
-                <th className="px-6 py-3.5">Timestamp</th>
-                <th className="px-6 py-3.5">User / Device</th>
-                <th className="px-6 py-3.5">Application</th>
-                <th className="px-6 py-3.5">Classification</th>
-                <th className="px-6 py-3.5 text-right">Duration</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sessionsData.map((s: any) => (
-                <tr
-                  key={s.id}
-                  className="border-b border-border/50 last:border-0 hover:bg-muted/20 transition-colors"
-                >
-                  <td className="px-6 py-3.5 text-xs text-muted-foreground font-mono">
-                    {new Date(s.started_at).toLocaleString()}
-                  </td>
-                  <td className="px-6 py-3.5 font-medium text-foreground">
-                    {s.profiles?.full_name ?? "User"}
-                    <p className="text-xs text-muted-foreground">
-                      {s.devices?.name ?? "Workstation"}
-                    </p>
-                  </td>
-                  <td className="px-6 py-3.5 font-semibold text-foreground">{s.app_name}</td>
-                  <td className="px-6 py-3.5">
-                    <Badge tone={categoryTone(s.category)}>{s.category}</Badge>
-                  </td>
-                  <td className="px-6 py-3.5 text-right text-xs font-mono font-medium text-foreground">
-                    {Math.round(s.duration_seconds / 60)}m {s.duration_seconds % 60}s
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground bg-muted/40">
+                  <th className="px-6 py-3.5 whitespace-nowrap">Application</th>
+                  <th className="px-6 py-3.5 whitespace-nowrap">Classification</th>
+                  <th className="px-6 py-3.5 whitespace-nowrap">Active Users</th>
+                  <th className="px-6 py-3.5 text-right whitespace-nowrap">Total Duration</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {appData.map((app: any, idx: number) => (
+                  <tr key={idx} className="border-b border-border/50 last:border-0 hover:bg-muted/20 transition-colors">
+                    <td className="px-6 py-3.5 font-semibold text-foreground flex items-center gap-2 whitespace-nowrap">
+                      <AppWindow className="size-4 text-primary/80" />
+                      <span>{app.app_name}</span>
+                    </td>
+                    <td className="px-6 py-3.5 whitespace-nowrap">
+                      <Badge tone={categoryTone(app.category)}>{app.category}</Badge>
+                    </td>
+                    <td className="px-6 py-3.5 text-muted-foreground text-xs font-medium whitespace-nowrap">
+                      {app.users} member{app.users === 1 ? "" : "s"}
+                    </td>
+                    <td className="px-6 py-3.5 text-right font-mono text-xs font-medium text-foreground whitespace-nowrap">
+                      {(app.total_seconds / 3600).toFixed(1)} hrs ({Math.round(app.total_seconds / 60)} mins)
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </Card>
     </div>

@@ -206,7 +206,7 @@ function DevicesPage() {
 
                   {/* Actions */}
                   <td className="px-6 py-3 text-right">
-                    <div className="flex justify-end gap-1.5 text-xs">
+                    <div className="flex flex-wrap justify-end gap-1.5 text-xs">
                       {d.status === "active" ? (
                         <button
                           onClick={() => handleAction(d.id, "pause")}
@@ -221,7 +221,7 @@ function DevicesPage() {
                           className="flex items-center gap-1 rounded border border-border px-2 py-1 text-success hover:bg-muted"
                         >
                           <Play className="size-3" />
-                          Re-activate
+                          Start
                         </button>
                       )}
                       {d.status !== "revoked" && (
