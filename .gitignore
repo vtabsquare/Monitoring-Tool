@@ -30,3 +30,27 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Archives
+*.zip
+
+# Electron build output
+agent/release/
+agent/dist-installer/
+
+# Electron generated binaries
+*.exe
+
+# Temporary build files
+*.tmp
+
+# Node
+node_modules/
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.*
+!.env.example
