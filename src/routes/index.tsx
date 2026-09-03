@@ -5,13 +5,13 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Aetherium — Employee Productivity Intelligence" },
+      { title: "VTAB SQUARE — Employee Productivity Intelligence" },
       {
         name: "description",
         content:
           "Admin-first productivity monitoring: deterministic focus and productivity metrics, device fleet telemetry, and AI-generated organizational insights.",
       },
-      { property: "og:title", content: "Aetherium — Employee Productivity Intelligence" },
+      { property: "og:title", content: "VTAB SQUARE — Employee Productivity Intelligence" },
       {
         property: "og:description",
         content:

@@ -13,7 +13,7 @@ import { PageHeader, Card, EmptyState } from "@/components/primitives";
 import { Building2, Plus, Edit2, Trash2, Users } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/organization")({
-  head: () => ({ meta: [{ title: "Organization — Aetherium" }] }),
+  head: () => ({ meta: [{ title: "Organization — VTAB SQUARE" }] }),
   component: OrganizationPage,
 });
 

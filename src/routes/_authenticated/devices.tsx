@@ -9,7 +9,7 @@ import { PageHeader, Card, Badge, EmptyState } from "@/components/primitives";
 import { User, Monitor, Laptop, Trash2, Pause, Play, ShieldAlert, Search } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/devices")({
-  head: () => ({ meta: [{ title: "Devices — Aetherium" }] }),
+  head: () => ({ meta: [{ title: "Devices — VTAB SQUARE" }] }),
   component: DevicesPage,
 });
 

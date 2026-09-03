@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/onboarding")({
   head: () => ({
-    meta: [{ title: "Create organization — Aetherium" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Create organization — VTAB SQUARE" }, { name: "robots", content: "noindex" }],
   }),
   component: OnboardingPage,
 });
@@ -70,12 +70,21 @@ function OnboardingPage() {
         </button>
       </div>
       <div className="w-full max-w-md">
-        <div className="mb-8 flex items-center justify-center gap-2">
-          <div className="flex size-9 items-center justify-center rounded bg-primary font-bold text-primary-foreground">
-            Æ
+        <div className="mb-8 flex items-center justify-center gap-3">
+          <div className="size-10 overflow-hidden rounded-lg border border-border/50 shadow-xs flex items-center justify-center shrink-0 bg-background">
+            <img
+              src="/logo-white.png"
+              alt="VTAB SQUARE Logo"
+              className="hidden dark:block size-full object-cover"
+            />
+            <img
+              src="/logo-blue.png"
+              alt="VTAB SQUARE Logo"
+              className="block dark:hidden size-full object-cover"
+            />
           </div>
-          <span className="text-xl font-semibold tracking-tight text-foreground">
-            AETHERIUM<span className="italic text-primary">OS</span>
+          <span className="text-xl font-bold tracking-tight text-foreground">
+            VTAB<span className="italic text-primary"> SQUARE</span>
           </span>
         </div>
 

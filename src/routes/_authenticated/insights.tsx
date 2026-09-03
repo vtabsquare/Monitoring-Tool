@@ -7,7 +7,7 @@ import { listAiReports, generateAiReport } from "@/lib/insights.functions";
 import { PageHeader, Card, Badge, EmptyState } from "@/components/primitives";
 
 export const Route = createFileRoute("/_authenticated/insights")({
-  head: () => ({ meta: [{ title: "AI Insights — Aetherium" }] }),
+  head: () => ({ meta: [{ title: "AI Insights — VTAB SQUARE" }] }),
   component: InsightsPage,
 });
 

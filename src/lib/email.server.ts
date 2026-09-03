@@ -15,12 +15,12 @@ export async function sendInvitationEmail({
   recipientEmail,
   recipientName,
   invitationToken,
-  orgName = "AetheriumOS",
+  orgName = "VTAB SQUARE",
   serverUrl = process.env.APP_URL || "http://localhost:8080",
 }: OnboardingEmailParams): Promise<{ success: boolean; error?: string }> {
   const apiKey = process.env.BREVO_API_KEY;
-  const senderEmail = process.env.BREVO_SENDER_EMAIL || "noreply@aetherium.io";
-  const senderName = process.env.BREVO_SENDER_NAME || "AetheriumOS Monitoring";
+  const senderEmail = process.env.BREVO_SENDER_EMAIL || "noreply@vtabsquare.com";
+  const senderName = process.env.BREVO_SENDER_NAME || "VTAB SQUARE Monitoring";
 
   const downloadUrl = `${serverUrl}/api/public/agent/download`;
 
@@ -131,7 +131,7 @@ export async function sendInvitationEmail({
       <body>
         <div class="container">
           <div class="header">
-            <div class="logo">Æ AETHERIUM OS</div>
+            <div class="logo">VTAB SQUARE</div>
             <div class="title">Welcome! Your Monitoring Application is Ready</div>
           </div>
 
@@ -167,7 +167,7 @@ export async function sendInvitationEmail({
           </div>
 
           <div class="footer">
-            AetheriumOS Desktop Agent Monitoring Platform &bull; Automated Onboarding System
+            VTAB SQUARE Desktop Agent Monitoring Platform &bull; Automated Onboarding System
           </div>
         </div>
       </body>

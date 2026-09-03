@@ -5,7 +5,7 @@ import { getDashboardData } from "@/lib/analytics.functions";
 import { PageHeader, Card, KpiCard, EmptyState } from "@/components/primitives";
 
 export const Route = createFileRoute("/_authenticated/focus")({
-  head: () => ({ meta: [{ title: "Focus Analytics — Aetherium" }] }),
+  head: () => ({ meta: [{ title: "Focus Analytics — VTAB SQUARE" }] }),
   component: FocusPage,
 });
 

@@ -2,6 +2,7 @@ import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-route
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { ThemeToggle } from "@/components/theme-toggle";
 import {
   LayoutDashboard,
   Users,
@@ -69,12 +70,21 @@ export function AppShell({ orgName }: { orgName?: string }) {
     <div className="min-h-screen bg-background text-foreground">
       <aside className="fixed left-0 top-0 z-20 flex h-full w-64 flex-col border-r border-sidebar-border bg-sidebar">
         <div className="border-b border-sidebar-border p-6">
-          <div className="flex items-center gap-2">
-            <div className="flex size-8 items-center justify-center rounded bg-primary font-bold text-primary-foreground">
-              Æ
+          <div className="flex items-center gap-3">
+            <div className="size-9 overflow-hidden rounded-lg border border-sidebar-border shadow-xs flex items-center justify-center shrink-0 bg-background">
+              <img
+                src="/logo-white.png"
+                alt="VTAB SQUARE Logo"
+                className="hidden dark:block size-full object-cover"
+              />
+              <img
+                src="/logo-blue.png"
+                alt="VTAB SQUARE Logo"
+                className="block dark:hidden size-full object-cover"
+              />
             </div>
-            <span className="text-lg font-semibold tracking-tight">
-              AETHERIUM<span className="italic text-primary">OS</span>
+            <span className="text-lg font-bold tracking-tight text-sidebar-foreground">
+              VTAB<span className="italic text-primary"> SQUARE</span>
             </span>
           </div>
         </div>
@@ -82,7 +92,7 @@ export function AppShell({ orgName }: { orgName?: string }) {
         <nav className="flex-1 space-y-1 overflow-y-auto p-4">
           {NAV.map((section) => (
             <div key={section.group}>
-              <div className="px-3 pb-2 pt-4 text-[10px] font-bold uppercase tracking-widest text-foreground/20">
+              <div className="px-3 pb-2 pt-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
                 {section.group}
               </div>
               {section.items.map((item) => {
@@ -95,7 +105,7 @@ export function AppShell({ orgName }: { orgName?: string }) {
                       "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
                       active
                         ? "bg-primary/10 font-medium text-primary"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                        : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground",
                     )}
                   >
                     <item.icon className="size-4" />
@@ -113,7 +123,7 @@ export function AppShell({ orgName }: { orgName?: string }) {
               {initials}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-medium">{email || "Admin"}</p>
+              <p className="truncate text-xs font-medium text-sidebar-foreground">{email || "Admin"}</p>
               <p className="truncate text-[10px] text-muted-foreground">
                 {orgName ?? "Organization"}
               </p>
@@ -121,7 +131,7 @@ export function AppShell({ orgName }: { orgName?: string }) {
             <button
               onClick={handleSignOut}
               title="Sign out"
-              className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground cursor-pointer"
             >
               <LogOut className="size-4" />
             </button>
@@ -130,6 +140,14 @@ export function AppShell({ orgName }: { orgName?: string }) {
       </aside>
 
       <main className="ml-64 min-h-screen p-8">
+        <header className="sticky top-0 z-10 -mx-8 -mt-8 mb-6 flex h-16 items-center justify-between border-b border-border bg-background/80 px-8 backdrop-blur-md">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              {orgName ?? "Flow Focus"}
+            </span>
+          </div>
+          <ThemeToggle />
+        </header>
         <Outlet />
       </main>
     </div>

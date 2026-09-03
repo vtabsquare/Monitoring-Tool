@@ -8,7 +8,7 @@ import { PageHeader, Card, EmptyState } from "@/components/primitives";
 import { Globe, Shield, Clock, HardDrive } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/settings/")({
-  head: () => ({ meta: [{ title: "Settings — Aetherium" }] }),
+  head: () => ({ meta: [{ title: "Settings — VTAB SQUARE" }] }),
   component: SettingsPage,
 });
 

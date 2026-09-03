@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { getActivitySessions, getAppUsage } from "@/lib/analytics.functions";
 import { listUsers } from "@/lib/users.functions";
 import { PageHeader, Card, Badge, EmptyState } from "@/components/primitives";
-import { User, Monitor, Clock, RefreshCw, Check, AlertTriangle, AppWindow, Activity } from "lucide-react";
+import { User, Monitor, Clock, RefreshCw, AppWindow, Activity } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -22,7 +22,7 @@ import {
 } from "recharts";
 
 export const Route = createFileRoute("/_authenticated/activity")({
-  head: () => ({ meta: [{ title: "Activity Timeline — Aetherium" }] }),
+  head: () => ({ meta: [{ title: "Activity Timeline — VTAB SQUARE" }] }),
   component: ActivityPage,
 });
 
@@ -46,7 +46,6 @@ function ActivityPage() {
   const [daysRange, setDaysRange] = useState<number>(1);
 
   const [lastSyncedTime, setLastSyncedTime] = useState<string | null>(null);
-  const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "synced" | "error">("idle");
 
   const activeUser = selectedUserId !== "all" ? usersData?.find((u: any) => u.id === selectedUserId) : null;
   const userDevices = activeUser?.devices ?? [];
@@ -59,11 +58,12 @@ function ActivityPage() {
     }
   }, [selectedUserId, userDevices, selectedDeviceId]);
 
+  // Continuous Automatic Synchronization with refetchInterval
   const {
     data: sessionsData,
     isLoading: isSessionsLoading,
-    isRefetching,
     refetch: refetchSessions,
+    dataUpdatedAt: sessionsUpdatedAt,
   } = useQuery({
     queryKey: ["activity-sessions", selectedUserId, selectedDeviceId, daysRange],
     queryFn: () =>
@@ -74,12 +74,14 @@ function ActivityPage() {
           days: daysRange,
         },
       }),
+    refetchInterval: 4000, // Continuously refetch every 4 seconds
   });
 
   const {
     data: appData,
     isLoading: isAppsLoading,
     refetch: refetchApps,
+    dataUpdatedAt: appsUpdatedAt,
   } = useQuery({
     queryKey: ["app-usage", selectedUserId, daysRange],
     queryFn: () =>
@@ -89,19 +91,31 @@ function ActivityPage() {
           days: daysRange,
         },
       }),
+    refetchInterval: 4000, // Continuously refetch every 4 seconds
   });
 
-  async function handleLiveSync() {
-    setSyncStatus("syncing");
+  useEffect(() => {
+    if (sessionsUpdatedAt || appsUpdatedAt) {
+      setLastSyncedTime(
+        new Date(Math.max(sessionsUpdatedAt, appsUpdatedAt)).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        }),
+      );
+    }
+  }, [sessionsUpdatedAt, appsUpdatedAt]);
+
+  // Manual Trigger to force immediate refetch without interrupting continuous sync
+  async function handleManualSync() {
     try {
       await Promise.all([refetchSessions(), refetchApps()]);
-      setSyncStatus("synced");
-      setLastSyncedTime("Just now");
-      setTimeout(() => setSyncStatus("idle"), 4000);
-    } catch (err) {
-      setSyncStatus("error");
-      toast.error("Synchronization failed. Please try again.");
-      setTimeout(() => setSyncStatus("idle"), 4000);
+      setLastSyncedTime(
+        new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
+      );
+      toast.success("Monitoring data refreshed!");
+    } catch {
+      toast.error("Synchronization refresh failed.");
     }
   }
 
@@ -144,41 +158,23 @@ function ActivityPage() {
           description="Application-level activity telemetry and usage analytics."
         />
 
+        {/* Live Sync Status & Control */}
         <div className="flex items-center gap-3">
           {lastSyncedTime && (
             <span className="text-xs text-muted-foreground font-medium">Last synced: {lastSyncedTime}</span>
           )}
           <button
-            onClick={handleLiveSync}
-            disabled={syncStatus === "syncing" || isRefetching}
-            className="flex items-center gap-1.5 rounded-md border border-border bg-card px-3.5 py-2 text-xs font-semibold text-foreground hover:bg-accent hover:text-accent-foreground disabled:opacity-50 transition-colors shadow-sm cursor-pointer"
+            onClick={handleManualSync}
+            className="flex items-center gap-2 rounded-md border border-border bg-card px-3.5 py-2 text-xs font-semibold text-foreground hover:bg-accent hover:text-accent-foreground transition-colors shadow-xs cursor-pointer"
+            title="Click to trigger an immediate sync refresh"
           >
-            {syncStatus === "syncing" || isRefetching ? (
-              <>
-                <RefreshCw className="size-3.5 animate-spin text-primary" />
-                <span>⟳ Syncing...</span>
-              </>
-            ) : syncStatus === "synced" ? (
-              <>
-                <Check className="size-3.5 text-success" />
-                <span className="text-success font-medium">✓ Synced</span>
-              </>
-            ) : syncStatus === "error" ? (
-              <>
-                <AlertTriangle className="size-3.5 text-danger" />
-                <span className="text-danger font-medium">⚠ Sync Failed</span>
-              </>
-            ) : (
-              <>
-                <RefreshCw className="size-3.5 text-muted-foreground" />
-                <span>↻ Live Sync</span>
-              </>
-            )}
+            <RefreshCw className="size-3.5 animate-spin text-primary" />
+            <span>Syncing...</span>
           </button>
         </div>
       </div>
 
-      <Card className="p-4 bg-card/80 border-border/80 backdrop-blur-sm shadow-sm">
+      <Card className="p-4 bg-card/80 border-border/80 backdrop-blur-sm shadow-xs">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-2">
@@ -265,7 +261,7 @@ function ActivityPage() {
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="p-6 lg:col-span-2 flex flex-col">
-          <h3 className="text-sm font-semibold mb-6 flex items-center gap-2">
+          <h3 className="text-sm font-semibold mb-6 flex items-center gap-2 text-foreground">
             <AppWindow className="size-4 text-primary" />
             Top Application Usage
           </h3>
@@ -283,36 +279,36 @@ function ActivityPage() {
                 <BarChart data={barData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorHours" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={1} />
-                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.8} />
+                      <stop offset="5%" stopColor="var(--primary)" stopOpacity={1} />
+                      <stop offset="95%" stopColor="var(--primary)" stopOpacity={0.6} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
                   <XAxis
                     dataKey="name"
-                    stroke="#94a3b8"
+                    stroke="var(--muted-foreground)"
                     fontSize={12}
                     tickLine={false}
                     axisLine={false}
                     tickFormatter={(val) => (val.length > 10 ? val.substring(0, 10) + "..." : val)}
                   />
-                  <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
+                  <YAxis stroke="var(--muted-foreground)" fontSize={12} tickLine={false} axisLine={false} />
                   <Tooltip
-                    cursor={{ fill: "#1e293b" }}
+                    cursor={{ fill: "var(--muted)" }}
                     contentStyle={{
-                      backgroundColor: "#0f172a",
-                      borderColor: "#334155",
+                      backgroundColor: "var(--popover)",
+                      borderColor: "var(--border)",
                       borderRadius: "8px",
                       fontSize: "12px",
-                      color: "#f8fafc",
+                      color: "var(--popover-foreground)",
                     }}
-                    itemStyle={{ color: "#f8fafc" }}
+                    itemStyle={{ color: "var(--popover-foreground)" }}
                   />
                   <Bar
                     dataKey="Hours"
                     fill="url(#colorHours)"
                     radius={[4, 4, 0, 0]}
-                    animationDuration={1500}
+                    animationDuration={1000}
                   />
                 </BarChart>
               </ResponsiveContainer>
@@ -321,7 +317,7 @@ function ActivityPage() {
         </Card>
 
         <Card className="p-6 flex flex-col">
-          <h3 className="text-sm font-semibold mb-6 flex items-center gap-2">
+          <h3 className="text-sm font-semibold mb-6 flex items-center gap-2 text-foreground">
             <Activity className="size-4 text-primary" />
             Time Allocation
           </h3>
@@ -339,19 +335,19 @@ function ActivityPage() {
                 <PieChart>
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "#0f172a",
-                      borderColor: "#334155",
+                      backgroundColor: "var(--popover)",
+                      borderColor: "var(--border)",
                       borderRadius: "8px",
                       fontSize: "12px",
-                      color: "#f8fafc",
+                      color: "var(--popover-foreground)",
                     }}
-                    itemStyle={{ color: "#f8fafc" }}
+                    itemStyle={{ color: "var(--popover-foreground)" }}
                     formatter={(value: number) => [
                       `${Math.floor(value / 3600)}h ${Math.floor((value % 3600) / 60)}m`,
                       "Duration",
                     ]}
                   />
-                  <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: "12px" }} />
+                  <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: "12px", color: "var(--muted-foreground)" }} />
                   <Pie
                     data={pieData}
                     cx="50%"
@@ -360,7 +356,7 @@ function ActivityPage() {
                     outerRadius={80}
                     paddingAngle={2}
                     dataKey="value"
-                    animationDuration={1500}
+                    animationDuration={1000}
                     stroke="none"
                   >
                     {pieData.map((entry, index) => (
@@ -378,9 +374,9 @@ function ActivityPage() {
       <div className="flex items-center gap-1 p-1 bg-muted/50 rounded-lg w-fit border border-border">
         <button
           onClick={() => setActiveTab("activity")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all cursor-pointer ${
             activeTab === "activity"
-              ? "bg-background text-foreground shadow-sm ring-1 ring-border"
+              ? "bg-background text-foreground shadow-xs ring-1 ring-border"
               : "text-muted-foreground hover:text-foreground hover:bg-muted"
           }`}
         >
@@ -389,9 +385,9 @@ function ActivityPage() {
         </button>
         <button
           onClick={() => setActiveTab("applications")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all cursor-pointer ${
             activeTab === "applications"
-              ? "bg-background text-foreground shadow-sm ring-1 ring-border"
+              ? "bg-background text-foreground shadow-xs ring-1 ring-border"
               : "text-muted-foreground hover:text-foreground hover:bg-muted"
           }`}
         >

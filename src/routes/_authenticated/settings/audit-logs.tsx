@@ -5,7 +5,7 @@ import { listAuditLogs } from "@/lib/users.functions";
 import { PageHeader, Card, EmptyState } from "@/components/primitives";
 
 export const Route = createFileRoute("/_authenticated/settings/audit-logs")({
-  head: () => ({ meta: [{ title: "Audit Logs — Aetherium" }] }),
+  head: () => ({ meta: [{ title: "Audit Logs — VTAB SQUARE" }] }),
   component: AuditLogsPage,
 });
 

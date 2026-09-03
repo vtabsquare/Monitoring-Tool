@@ -10,7 +10,7 @@ import { UserShiftEditor } from "@/components/shift-editor";
 import { Copy, Check, Edit2, Trash2, Mail, Download } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/settings/users")({
-  head: () => ({ meta: [{ title: "Users — Aetherium" }] }),
+  head: () => ({ meta: [{ title: "Users — VTAB SQUARE" }] }),
   component: UsersPage,
 });
 

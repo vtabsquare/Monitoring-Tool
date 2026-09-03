@@ -8,7 +8,7 @@ import { PageHeader, Card, Badge, EmptyState } from "@/components/primitives";
 import { User, Clock, FileText, Building2, Laptop, ShieldCheck, Activity } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/settings/reports")({
-  head: () => ({ meta: [{ title: "Reports — Aetherium" }] }),
+  head: () => ({ meta: [{ title: "Reports — VTAB SQUARE" }] }),
   component: ReportsPage,
 });
 

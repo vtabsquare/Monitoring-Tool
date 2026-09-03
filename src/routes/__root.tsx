@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider, useTheme } from "@/components/theme-provider";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -78,13 +79,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Aetherium — Employee Productivity Intelligence" },
+      { title: "VTAB SQUARE — Employee Productivity Intelligence" },
       {
         name: "description",
         content:
           "Admin-first productivity monitoring platform. Track focus, productive time, and device telemetry across your organization.",
       },
-      { property: "og:title", content: "Aetherium — Employee Productivity Intelligence" },
+      { property: "og:title", content: "VTAB SQUARE — Employee Productivity Intelligence" },
       {
         property: "og:description",
         content:
@@ -112,8 +113,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en">
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var s=localStorage.getItem('flow_focus_theme');var t=s==='light'||s==='dark'?s:'dark';if(t==='dark'){document.documentElement.classList.add('dark');document.documentElement.classList.remove('light');}else{document.documentElement.classList.add('light');document.documentElement.classList.remove('dark');}}catch(e){}})();`,
+          }}
+        />
         <HeadContent />
       </head>
       <body>
@@ -124,13 +130,22 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
-function RootComponent() {
+function InnerRootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const { theme } = useTheme();
 
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
-      <Toaster theme="dark" position="bottom-right" />
+      <Toaster theme={theme} position="bottom-right" />
     </QueryClientProvider>
+  );
+}
+
+function RootComponent() {
+  return (
+    <ThemeProvider>
+      <InnerRootComponent />
+    </ThemeProvider>
   );
 }

@@ -101,62 +101,51 @@ export const getDashboardData = createServerFn({ method: "GET" })
     for (const s of summaries as any[]) {
       const u = perUser.get(s.profile_id) ?? {
         profile_id: s.profile_id,
-        full_name: s.profiles?.full_name ?? "Unknown",
-        job_role: s.profiles?.job_role ?? "",
-        department: s.profiles?.departments?.name ?? "—",
-        productive_seconds: 0,
-        distracted_seconds: 0,
-        neutral_seconds: 0,
-        idle_seconds: 0,
-        context_switches: 0,
-        days: 0,
-        score_sum: 0,
+        full_name: s.profiles?.full_name ?? "User",
+        department: s.profiles?.departments?.name ?? "General",
+        prod_sum: 0,
         focus_sum: 0,
+        count: 0,
+        switches: 0,
       };
-      u.productive_seconds += s.productive_seconds;
-      u.distracted_seconds += s.distracted_seconds;
-      u.neutral_seconds += s.neutral_seconds;
-      u.idle_seconds += s.idle_seconds;
-      u.context_switches += s.context_switches;
-      u.score_sum += s.productivity_score;
+      u.prod_sum += s.productivity_score;
       u.focus_sum += s.focus_score;
-      u.days += 1;
+      u.count += 1;
+      u.switches += s.context_switches ?? 0;
       perUser.set(s.profile_id, u);
     }
-    const userPerformance = [...perUser.values()]
-      .map((u) => ({
-        ...u,
-        avg_productivity: Math.round((u.score_sum / Math.max(1, u.days)) * 10) / 10,
-        avg_focus: Math.round((u.focus_sum / Math.max(1, u.days)) * 10) / 10,
-      }))
-      .sort((a, b) => b.avg_productivity - a.avg_productivity);
+    const userPerformance = [...perUser.values()].map((u) => ({
+      profile_id: u.profile_id,
+      full_name: u.full_name,
+      department: u.department,
+      avg_productivity: Math.round((u.prod_sum / u.count) * 10) / 10,
+      avg_focus: Math.round((u.focus_sum / u.count) * 10) / 10,
+      context_switches: u.switches,
+    }));
+
+    const totalSecsToday = sum(todayRows, "productive_seconds") + sum(todayRows, "distracted_seconds") + sum(todayRows, "idle_seconds");
+    const distractedRatio = totalSecsToday > 0 ? Math.round((sum(todayRows, "distracted_seconds") / totalSecsToday) * 100) : 0;
 
     return {
       org,
       kpis: {
-        org_productivity: Math.round(avg(summaries as any[], "productivity_score") * 10) / 10,
-        focus_score: Math.round(avg(summaries as any[], "focus_score") * 10) / 10,
-        productive_seconds_today: sum(todayRows, "productive_seconds"),
-        distracted_ratio: (() => {
-          const p = sum(summaries as any[], "productive_seconds");
-          const d = sum(summaries as any[], "distracted_seconds");
-          const n = sum(summaries as any[], "neutral_seconds");
-          return p + d + n > 0 ? Math.round((d / (p + d + n)) * 1000) / 10 : 0;
-        })(),
+        org_productivity: Math.round(avg(todayRows, "productivity_score")),
+        focus_score: Math.round(avg(todayRows, "focus_score")),
         active_users: (profiles ?? []).filter((p: any) => p.status === "active").length,
         total_users: (profiles ?? []).length,
         devices_online: (devices ?? []).filter(
-          (d: any) => d.monitoring_state === "active" || d.monitoring_state === "off_shift",
+          (d: any) =>
+            d.last_heartbeat_at &&
+            Date.now() - new Date(d.last_heartbeat_at).getTime() < 120_000,
         ).length,
         total_devices: (devices ?? []).length,
-        focus_seconds_today: sum(todayRows, "focus_seconds"),
-        context_switches: sum(summaries as any[], "context_switches"),
+        focus_seconds_today: sum(todayRows, "productive_seconds"),
         pending_invites: (invites ?? []).length,
+        distracted_ratio: distractedRatio,
       },
       trend,
       userPerformance,
-      devices: devices ?? [],
-      defaultSchedule: schedule ?? [],
+      schedule: schedule ?? [],
     };
   });
 
@@ -165,7 +154,7 @@ export const getAppUsage = createServerFn({ method: "GET" })
   .inputValidator((data) =>
     z
       .object({
-        days: z.number().int().min(1).max(90).default(14),
+        days: z.number().int().min(1).max(90).default(7),
         profile_id: z.string().uuid().optional(),
       })
       .parse(data ?? {}),
@@ -175,28 +164,27 @@ export const getAppUsage = createServerFn({ method: "GET" })
     const since = new Date(Date.now() - data.days * 86400_000).toISOString();
     let q = context.supabase
       .from("activity_sessions")
-      .select("app_name, process_name, category, is_idle, duration_seconds, profile_id, profiles(full_name)")
+      .select("app_name, process_name, category, duration_seconds, profiles(full_name)")
       .eq("org_id", orgId)
       .gte("started_at", since);
     if (data.profile_id) q = q.eq("profile_id", data.profile_id);
     const { data: sessions, error } = await q;
     if (error) throw new Error(error.message);
 
-    const byApp = new Map<string, any>();
-    for (const s of sessions ?? []) {
+    const byApp = new Map<
+      string,
+      { app_name: string; category: string; total_seconds: number; users: Set<string> }
+    >();
+    for (const s of sessions as any[]) {
       const normalizedName = normalizeAppName(s.app_name, s.process_name);
-      const canonicalCategory = getCanonicalClassification(normalizedName);
-
+      const category = getCanonicalClassification(normalizedName);
       const a = byApp.get(normalizedName) ?? {
         app_name: normalizedName,
-        process_name: s.process_name,
-        category: canonicalCategory,
+        category,
         total_seconds: 0,
-        sessions: 0,
         users: new Set<string>(),
       };
-      a.total_seconds += s.duration_seconds;
-      a.sessions += 1;
+      a.total_seconds += s.duration_seconds || 0;
       if (s.profiles?.full_name) a.users.add(s.profiles.full_name);
       byApp.set(normalizedName, a);
     }
@@ -240,6 +228,90 @@ export const getActivitySessions = createServerFn({ method: "GET" })
         app_name: normalizedName,
         category: getCanonicalClassification(normalizedName),
         window_title: null, // Privacy: Always omit window titles
+      };
+    });
+  });
+
+export const getLiveWorkEntries = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { orgId } = await requireAdminOrg(context.supabase, context.userId);
+
+    // 1. Fetch profiles in organization
+    const { data: profiles, error: profileErr } = await context.supabase
+      .from("profiles")
+      .select("id, full_name, email, status")
+      .eq("org_id", orgId)
+      .order("full_name", { ascending: true });
+
+    if (profileErr) throw new Error(profileErr.message);
+
+    const profileIds = (profiles ?? []).map((p: any) => p.id);
+    if (!profileIds.length) return [];
+
+    // 2. Fetch devices and recent activity sessions
+    const since24h = new Date(Date.now() - 86400_000).toISOString();
+    const [{ data: devices }, { data: sessions }] = await Promise.all([
+      context.supabase
+        .from("devices")
+        .select("id, profile_id, status, monitoring_state, last_heartbeat_at")
+        .eq("org_id", orgId)
+        .in("profile_id", profileIds),
+      context.supabase
+        .from("activity_sessions")
+        .select("id, profile_id, device_id, app_name, process_name, category, is_idle, started_at, duration_seconds")
+        .eq("org_id", orgId)
+        .gte("started_at", since24h)
+        .order("started_at", { ascending: false }),
+    ]);
+
+    const now = Date.now();
+
+    // Map each profile to their single live work record
+    return (profiles ?? []).map((profile: any) => {
+      const userDevices = (devices ?? []).filter((d: any) => d.profile_id === profile.id);
+
+      // A device is online if heartbeat is within 2 minutes and not offline/revoked
+      const activeOnlineDevice = userDevices.find((d: any) => {
+        if (!d.last_heartbeat_at) return false;
+        const hbAge = now - new Date(d.last_heartbeat_at).getTime();
+        const isRecent = hbAge < 120_000;
+        const isStateActive = d.status === "active" && d.monitoring_state !== "offline" && d.monitoring_state !== "revoked";
+        return isRecent && isStateActive;
+      });
+
+      const latestSession = (sessions ?? []).find((s: any) => s.profile_id === profile.id);
+      const isOnline = Boolean(activeOnlineDevice);
+
+      // OFFLINE STATE: When device is offline, category is "offline", app is "—", running is "—"
+      if (!isOnline || !latestSession) {
+        return {
+          id: `offline-${profile.id}`,
+          profile_id: profile.id,
+          employee_name: profile.full_name || profile.email || "Employee",
+          app_name: "—",
+          category: "offline",
+          is_online: false,
+          started_at: null,
+          duration_seconds: null,
+        };
+      }
+
+      // ONLINE STATE: Current application, category, and duration
+      const normalizedName = normalizeAppName(latestSession.app_name, latestSession.process_name);
+      const cat = latestSession.is_idle
+        ? "idle"
+        : getCanonicalClassification(normalizedName);
+
+      return {
+        id: latestSession.id,
+        profile_id: profile.id,
+        employee_name: profile.full_name || profile.email || "Employee",
+        app_name: normalizedName,
+        category: cat,
+        is_online: true,
+        started_at: latestSession.started_at,
+        duration_seconds: latestSession.duration_seconds || 0,
       };
     });
   });

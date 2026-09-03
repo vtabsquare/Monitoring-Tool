@@ -7,8 +7,8 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Sign in — Aetherium" },
-      { name: "description", content: "Sign in to the Aetherium admin console." },
+      { title: "Sign in — VTAB SQUARE" },
+      { name: "description", content: "Sign in to the VTAB SQUARE admin console." },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -63,12 +63,21 @@ function AuthPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm">
-        <div className="mb-8 flex items-center justify-center gap-2">
-          <div className="flex size-9 items-center justify-center rounded bg-primary font-bold text-primary-foreground">
-            Æ
+        <div className="mb-8 flex items-center justify-center gap-3">
+          <div className="size-10 overflow-hidden rounded-lg border border-border/50 shadow-xs flex items-center justify-center shrink-0 bg-background">
+            <img
+              src="/logo-white.png"
+              alt="VTAB SQUARE Logo"
+              className="hidden dark:block size-full object-cover"
+            />
+            <img
+              src="/logo-blue.png"
+              alt="VTAB SQUARE Logo"
+              className="block dark:hidden size-full object-cover"
+            />
           </div>
-          <span className="text-xl font-semibold tracking-tight text-foreground">
-            AETHERIUM<span className="italic text-primary">OS</span>
+          <span className="text-xl font-bold tracking-tight text-foreground">
+            VTAB<span className="italic text-primary"> SQUARE</span>
           </span>
         </div>
 
@@ -134,7 +143,7 @@ function AuthPage() {
           </button>
 
           <p className="mt-5 text-center text-xs text-muted-foreground">
-            {mode === "signin" ? "New to Aetherium? " : "Already have an account? "}
+            {mode === "signin" ? "New to VTAB SQUARE? " : "Already have an account? "}
             <button
               onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
               className="font-medium text-primary hover:underline"

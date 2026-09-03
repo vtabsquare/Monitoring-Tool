@@ -2,7 +2,7 @@
   "name": "flow-focus-agent",
   "version": "1.0.0",
   "description": "Flow Focus Windows Desktop Productivity Monitoring Agent",
-  "author": "AetheriumOS",
+  "author": "VTAB SQUARE",
   "main": "dist/main/main.js",
   "scripts": {
     "copy:renderer": "node -e \"const fs=require('fs'); fs.mkdirSync('dist/renderer',{recursive:true}); fs.copyFileSync('src/renderer/index.html','dist/renderer/index.html'); fs.mkdirSync('dist/assets',{recursive:true}); if(fs.existsSync('assets/icon.png')) fs.copyFileSync('assets/icon.png','dist/assets/icon.png');\"",
@@ -15,7 +15,7 @@
     "dist/**/*"
   ],
   "build": {
-    "appId": "com.aetherium.flowfocusagent",
+    "appId": "com.vtabsquare.flowfocusagent",
     "productName": "Flow Focus Desktop Agent",
     "directories": {
       "output": "C:/Users/moham/agent-build-output"
