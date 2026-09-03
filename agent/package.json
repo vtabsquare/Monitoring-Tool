@@ -1,0 +1,47 @@
+{
+  "name": "flow-focus-agent",
+  "version": "1.0.0",
+  "description": "Flow Focus Windows Desktop Productivity Monitoring Agent",
+  "author": "AetheriumOS",
+  "main": "dist/main/main.js",
+  "scripts": {
+    "copy:renderer": "node -e \"const fs=require('fs'); fs.mkdirSync('dist/renderer',{recursive:true}); fs.copyFileSync('src/renderer/index.html','dist/renderer/index.html'); fs.mkdirSync('dist/assets',{recursive:true}); if(fs.existsSync('assets/icon.png')) fs.copyFileSync('assets/icon.png','dist/assets/icon.png');\"",
+    "build:main": "tsc -p tsconfig.json",
+    "build": "npm run build:main && npm run copy:renderer",
+    "start": "npm run build && electron .",
+    "pack:win": "npm run build && electron-builder --win && node scripts/copy-nsis.js"
+  },
+  "files": [
+    "dist/**/*"
+  ],
+  "build": {
+    "appId": "com.aetherium.flowfocusagent",
+    "productName": "Flow Focus Desktop Agent",
+    "directories": {
+      "output": "C:/Users/moham/agent-build-output"
+    },
+    "files": [
+      "dist/**/*"
+    ],
+    "asar": true,
+    "win": {
+      "target": "nsis",
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "nsis": {
+      "oneClick": true,
+      "allowToChangeInstallationDirectory": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Flow Focus Desktop Agent",
+      "uninstallDisplayName": "Flow Focus Desktop Agent"
+    }
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^22.13.4",
+    "electron": "^34.2.0",
+    "electron-builder": "^26.0.0",
+    "typescript": "^5.7.3"
+  }
+}

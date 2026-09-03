@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { createOrganization } from "@/lib/org.functions";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/onboarding")({
   head: () => ({
@@ -46,8 +47,28 @@ function OnboardingPage() {
     }
   }
 
+  async function handleSignOut() {
+    try {
+      setBusy(true);
+      await supabase.auth.signOut();
+      navigate({ to: "/auth", replace: true });
+    } catch (err) {
+      toast.error("Failed to sign out");
+      setBusy(false);
+    }
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      <div className="absolute right-4 top-4">
+        <button
+          onClick={handleSignOut}
+          disabled={busy}
+          className="rounded-md border border-border bg-card px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
+        >
+          Sign out
+        </button>
+      </div>
       <div className="w-full max-w-md">
         <div className="mb-8 flex items-center justify-center gap-2">
           <div className="flex size-9 items-center justify-center rounded bg-primary font-bold text-primary-foreground">

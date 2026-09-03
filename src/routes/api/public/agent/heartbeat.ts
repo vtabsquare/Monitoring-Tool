@@ -22,7 +22,11 @@ export const Route = createFileRoute("/api/public/agent/heartbeat")({
         const raw = await request.json().catch(() => ({}));
         const body = bodySchema.safeParse(raw);
 
-        const schedule = await getEffectiveSchedule(supabaseAdmin, device.org_id, device.profile_id);
+        const schedule = await getEffectiveSchedule(
+          supabaseAdmin,
+          device.org_id,
+          device.profile_id,
+        );
         const inShift = device.status === "active" && isWithinShift(schedule);
         const monitoring = device.status === "paused" ? "paused" : inShift ? "active" : "off_shift";
 
@@ -31,7 +35,9 @@ export const Route = createFileRoute("/api/public/agent/heartbeat")({
           .update({
             last_heartbeat_at: new Date().toISOString(),
             monitoring_state: monitoring,
-            ...(body.success && body.data.agent_version ? { agent_version: body.data.agent_version } : {}),
+            ...(body.success && body.data.agent_version
+              ? { agent_version: body.data.agent_version }
+              : {}),
           })
           .eq("id", device.id);
 

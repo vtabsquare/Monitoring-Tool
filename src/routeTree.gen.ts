@@ -13,9 +13,19 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
+import { Route as AuthenticatedApplicationsRouteImport } from './routes/_authenticated/applications'
+import { Route as AuthenticatedAuditLogsRouteImport } from './routes/_authenticated/audit-logs'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedDevicesRouteImport } from './routes/_authenticated/devices'
+import { Route as AuthenticatedFocusRouteImport } from './routes/_authenticated/focus'
+import { Route as AuthenticatedInsightsRouteImport } from './routes/_authenticated/insights'
+import { Route as AuthenticatedOrganizationRouteImport } from './routes/_authenticated/organization'
+import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
 import { Route as ApiPublicAgentConfigRouteImport } from './routes/api/public/agent/config'
+import { Route as ApiPublicAgentDownloadRouteImport } from './routes/api/public/agent/download'
 import { Route as ApiPublicAgentHeartbeatRouteImport } from './routes/api/public/agent/heartbeat'
 import { Route as ApiPublicAgentRegisterRouteImport } from './routes/api/public/agent/register'
 import { Route as ApiPublicAgentRevokeRouteImport } from './routes/api/public/agent/revoke'
@@ -40,9 +50,56 @@ const OnboardingRoute = OnboardingRouteImport.update({
   path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedActivityRoute = AuthenticatedActivityRouteImport.update({
+  id: '/activity',
+  path: '/activity',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedApplicationsRoute =
+  AuthenticatedApplicationsRouteImport.update({
+    id: '/applications',
+    path: '/applications',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAuditLogsRoute = AuthenticatedAuditLogsRouteImport.update({
+  id: '/audit-logs',
+  path: '/audit-logs',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDevicesRoute = AuthenticatedDevicesRouteImport.update({
+  id: '/devices',
+  path: '/devices',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedFocusRoute = AuthenticatedFocusRouteImport.update({
+  id: '/focus',
+  path: '/focus',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedInsightsRoute = AuthenticatedInsightsRouteImport.update({
+  id: '/insights',
+  path: '/insights',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedOrganizationRoute =
+  AuthenticatedOrganizationRouteImport.update({
+    id: '/organization',
+    path: '/organization',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedUsersRoute = AuthenticatedUsersRouteImport.update({
@@ -53,6 +110,11 @@ const AuthenticatedUsersRoute = AuthenticatedUsersRouteImport.update({
 const ApiPublicAgentConfigRoute = ApiPublicAgentConfigRouteImport.update({
   id: '/api/public/agent/config',
   path: '/api/public/agent/config',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicAgentDownloadRoute = ApiPublicAgentDownloadRouteImport.update({
+  id: '/api/public/agent/download',
+  path: '/api/public/agent/download',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicAgentHeartbeatRoute = ApiPublicAgentHeartbeatRouteImport.update({
@@ -80,9 +142,19 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/onboarding': typeof OnboardingRoute
+  '/activity': typeof AuthenticatedActivityRoute
+  '/applications': typeof AuthenticatedApplicationsRoute
+  '/audit-logs': typeof AuthenticatedAuditLogsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/devices': typeof AuthenticatedDevicesRoute
+  '/focus': typeof AuthenticatedFocusRoute
+  '/insights': typeof AuthenticatedInsightsRoute
+  '/organization': typeof AuthenticatedOrganizationRoute
+  '/reports': typeof AuthenticatedReportsRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/users': typeof AuthenticatedUsersRoute
   '/api/public/agent/config': typeof ApiPublicAgentConfigRoute
+  '/api/public/agent/download': typeof ApiPublicAgentDownloadRoute
   '/api/public/agent/heartbeat': typeof ApiPublicAgentHeartbeatRoute
   '/api/public/agent/register': typeof ApiPublicAgentRegisterRoute
   '/api/public/agent/revoke': typeof ApiPublicAgentRevokeRoute
@@ -92,9 +164,19 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/onboarding': typeof OnboardingRoute
+  '/activity': typeof AuthenticatedActivityRoute
+  '/applications': typeof AuthenticatedApplicationsRoute
+  '/audit-logs': typeof AuthenticatedAuditLogsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/devices': typeof AuthenticatedDevicesRoute
+  '/focus': typeof AuthenticatedFocusRoute
+  '/insights': typeof AuthenticatedInsightsRoute
+  '/organization': typeof AuthenticatedOrganizationRoute
+  '/reports': typeof AuthenticatedReportsRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/users': typeof AuthenticatedUsersRoute
   '/api/public/agent/config': typeof ApiPublicAgentConfigRoute
+  '/api/public/agent/download': typeof ApiPublicAgentDownloadRoute
   '/api/public/agent/heartbeat': typeof ApiPublicAgentHeartbeatRoute
   '/api/public/agent/register': typeof ApiPublicAgentRegisterRoute
   '/api/public/agent/revoke': typeof ApiPublicAgentRevokeRoute
@@ -106,9 +188,19 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/onboarding': typeof OnboardingRoute
+  '/_authenticated/activity': typeof AuthenticatedActivityRoute
+  '/_authenticated/applications': typeof AuthenticatedApplicationsRoute
+  '/_authenticated/audit-logs': typeof AuthenticatedAuditLogsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/devices': typeof AuthenticatedDevicesRoute
+  '/_authenticated/focus': typeof AuthenticatedFocusRoute
+  '/_authenticated/insights': typeof AuthenticatedInsightsRoute
+  '/_authenticated/organization': typeof AuthenticatedOrganizationRoute
+  '/_authenticated/reports': typeof AuthenticatedReportsRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/api/public/agent/config': typeof ApiPublicAgentConfigRoute
+  '/api/public/agent/download': typeof ApiPublicAgentDownloadRoute
   '/api/public/agent/heartbeat': typeof ApiPublicAgentHeartbeatRoute
   '/api/public/agent/register': typeof ApiPublicAgentRegisterRoute
   '/api/public/agent/revoke': typeof ApiPublicAgentRevokeRoute
@@ -120,9 +212,19 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/onboarding'
+    | '/activity'
+    | '/applications'
+    | '/audit-logs'
     | '/dashboard'
+    | '/devices'
+    | '/focus'
+    | '/insights'
+    | '/organization'
+    | '/reports'
+    | '/settings'
     | '/users'
     | '/api/public/agent/config'
+    | '/api/public/agent/download'
     | '/api/public/agent/heartbeat'
     | '/api/public/agent/register'
     | '/api/public/agent/revoke'
@@ -132,9 +234,19 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/onboarding'
+    | '/activity'
+    | '/applications'
+    | '/audit-logs'
     | '/dashboard'
+    | '/devices'
+    | '/focus'
+    | '/insights'
+    | '/organization'
+    | '/reports'
+    | '/settings'
     | '/users'
     | '/api/public/agent/config'
+    | '/api/public/agent/download'
     | '/api/public/agent/heartbeat'
     | '/api/public/agent/register'
     | '/api/public/agent/revoke'
@@ -145,9 +257,19 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/onboarding'
+    | '/_authenticated/activity'
+    | '/_authenticated/applications'
+    | '/_authenticated/audit-logs'
     | '/_authenticated/dashboard'
+    | '/_authenticated/devices'
+    | '/_authenticated/focus'
+    | '/_authenticated/insights'
+    | '/_authenticated/organization'
+    | '/_authenticated/reports'
+    | '/_authenticated/settings'
     | '/_authenticated/users'
     | '/api/public/agent/config'
+    | '/api/public/agent/download'
     | '/api/public/agent/heartbeat'
     | '/api/public/agent/register'
     | '/api/public/agent/revoke'
@@ -160,6 +282,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   OnboardingRoute: typeof OnboardingRoute
   ApiPublicAgentConfigRoute: typeof ApiPublicAgentConfigRoute
+  ApiPublicAgentDownloadRoute: typeof ApiPublicAgentDownloadRoute
   ApiPublicAgentHeartbeatRoute: typeof ApiPublicAgentHeartbeatRoute
   ApiPublicAgentRegisterRoute: typeof ApiPublicAgentRegisterRoute
   ApiPublicAgentRevokeRoute: typeof ApiPublicAgentRevokeRoute
@@ -196,11 +319,74 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/activity': {
+      id: '/_authenticated/activity'
+      path: '/activity'
+      fullPath: '/activity'
+      preLoaderRoute: typeof AuthenticatedActivityRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/applications': {
+      id: '/_authenticated/applications'
+      path: '/applications'
+      fullPath: '/applications'
+      preLoaderRoute: typeof AuthenticatedApplicationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/audit-logs': {
+      id: '/_authenticated/audit-logs'
+      path: '/audit-logs'
+      fullPath: '/audit-logs'
+      preLoaderRoute: typeof AuthenticatedAuditLogsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/devices': {
+      id: '/_authenticated/devices'
+      path: '/devices'
+      fullPath: '/devices'
+      preLoaderRoute: typeof AuthenticatedDevicesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/focus': {
+      id: '/_authenticated/focus'
+      path: '/focus'
+      fullPath: '/focus'
+      preLoaderRoute: typeof AuthenticatedFocusRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/insights': {
+      id: '/_authenticated/insights'
+      path: '/insights'
+      fullPath: '/insights'
+      preLoaderRoute: typeof AuthenticatedInsightsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/organization': {
+      id: '/_authenticated/organization'
+      path: '/organization'
+      fullPath: '/organization'
+      preLoaderRoute: typeof AuthenticatedOrganizationRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/reports': {
+      id: '/_authenticated/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof AuthenticatedReportsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/users': {
@@ -215,6 +401,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/agent/config'
       fullPath: '/api/public/agent/config'
       preLoaderRoute: typeof ApiPublicAgentConfigRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/agent/download': {
+      id: '/api/public/agent/download'
+      path: '/api/public/agent/download'
+      fullPath: '/api/public/agent/download'
+      preLoaderRoute: typeof ApiPublicAgentDownloadRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/agent/heartbeat': {
@@ -249,12 +442,30 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedActivityRoute: typeof AuthenticatedActivityRoute
+  AuthenticatedApplicationsRoute: typeof AuthenticatedApplicationsRoute
+  AuthenticatedAuditLogsRoute: typeof AuthenticatedAuditLogsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedDevicesRoute: typeof AuthenticatedDevicesRoute
+  AuthenticatedFocusRoute: typeof AuthenticatedFocusRoute
+  AuthenticatedInsightsRoute: typeof AuthenticatedInsightsRoute
+  AuthenticatedOrganizationRoute: typeof AuthenticatedOrganizationRoute
+  AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedActivityRoute: AuthenticatedActivityRoute,
+  AuthenticatedApplicationsRoute: AuthenticatedApplicationsRoute,
+  AuthenticatedAuditLogsRoute: AuthenticatedAuditLogsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedDevicesRoute: AuthenticatedDevicesRoute,
+  AuthenticatedFocusRoute: AuthenticatedFocusRoute,
+  AuthenticatedInsightsRoute: AuthenticatedInsightsRoute,
+  AuthenticatedOrganizationRoute: AuthenticatedOrganizationRoute,
+  AuthenticatedReportsRoute: AuthenticatedReportsRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedUsersRoute: AuthenticatedUsersRoute,
 }
 
@@ -267,6 +478,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   OnboardingRoute: OnboardingRoute,
   ApiPublicAgentConfigRoute: ApiPublicAgentConfigRoute,
+  ApiPublicAgentDownloadRoute: ApiPublicAgentDownloadRoute,
   ApiPublicAgentHeartbeatRoute: ApiPublicAgentHeartbeatRoute,
   ApiPublicAgentRegisterRoute: ApiPublicAgentRegisterRoute,
   ApiPublicAgentRevokeRoute: ApiPublicAgentRevokeRoute,

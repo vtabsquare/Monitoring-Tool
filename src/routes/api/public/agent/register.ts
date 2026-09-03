@@ -1,10 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
-import {
-  generateDeviceKey,
-  hashDeviceKey,
-  getEffectiveSchedule,
-} from "@/lib/agent.server";
+import { generateDeviceKey, hashDeviceKey, getEffectiveSchedule } from "@/lib/agent.server";
 
 /**
  * POST /api/public/agent/register
@@ -13,7 +9,7 @@ import {
  * the invitation's org + user and issues device credentials exactly once.
  */
 const bodySchema = z.object({
-  invitation_token: z.string().min(16).max(128),
+  invitation_token: z.string().min(8).max(128),
   device_name: z.string().min(1).max(120),
   os: z.string().min(1).max(120),
   agent_version: z.string().min(1).max(40),
@@ -30,7 +26,12 @@ export const Route = createFileRoute("/api/public/agent/register")({
           return Response.json({ error: "Invalid JSON" }, { status: 400 });
         }
         const parsed = bodySchema.safeParse(body);
-        if (!parsed.success) return Response.json({ error: "Invalid payload" }, { status: 400 });
+        if (!parsed.success) {
+          return Response.json(
+            { error: "Invalid or malformed activation code format." },
+            { status: 400 }
+          );
+        }
         const input = parsed.data;
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -40,12 +41,36 @@ export const Route = createFileRoute("/api/public/agent/register")({
         const { data: invite } = await supabaseAdmin
           .from("invitations")
           .select("id, org_id, profile_id, email, status, expires_at")
-          .eq("token", input.invitation_token)
+          .eq("token", input.invitation_token.trim())
           .maybeSingle();
-        if (!invite || ["revoked", "expired"].includes(invite.status))
-          return Response.json({ error: "Invalid invitation" }, { status: 401 });
-        if (new Date(invite.expires_at) < new Date())
-          return Response.json({ error: "Invitation expired", code: "INVITE_EXPIRED" }, { status: 410 });
+
+        if (!invite) {
+          return Response.json(
+            { error: "Invalid or expired activation code." },
+            { status: 401 }
+          );
+        }
+
+        if (["revoked", "expired"].includes(invite.status)) {
+          return Response.json(
+            { error: "This activation code has expired or been revoked." },
+            { status: 401 }
+          );
+        }
+
+        if (invite.status === "accepted") {
+          return Response.json(
+            { error: "This activation code has already been used to activate a device." },
+            { status: 409 }
+          );
+        }
+
+        if (new Date(invite.expires_at) < new Date()) {
+          return Response.json(
+            { error: "This activation code has expired.", code: "INVITE_EXPIRED" },
+            { status: 410 }
+          );
+        }
 
         const { data: profile } = await supabaseAdmin
           .from("profiles")
@@ -53,8 +78,13 @@ export const Route = createFileRoute("/api/public/agent/register")({
           .eq("id", invite.profile_id)
           .eq("org_id", invite.org_id)
           .single();
-        if (!profile || profile.status === "disabled")
-          return Response.json({ error: "User is disabled" }, { status: 403 });
+
+        if (!profile || profile.status === "disabled") {
+          return Response.json(
+            { error: "The user profile associated with this activation code is disabled." },
+            { status: 403 }
+          );
+        }
 
         const deviceKey = generateDeviceKey();
         const { data: device, error } = await supabaseAdmin
@@ -67,18 +97,21 @@ export const Route = createFileRoute("/api/public/agent/register")({
             agent_version: input.agent_version,
             device_key_hash: hashDeviceKey(deviceKey),
             status: "active",
-            monitoring_state: "off_shift",
+            monitoring_state: "active",
             registered_at: new Date().toISOString(),
             last_heartbeat_at: new Date().toISOString(),
           })
           .select("id")
           .single();
-        if (error) return Response.json({ error: "Registration failed" }, { status: 500 });
 
-        await supabaseAdmin
-          .from("invitations")
-          .update({ status: "accepted" })
-          .eq("id", invite.id);
+        if (error) {
+          return Response.json(
+            { error: "Unable to register device. Please try again later." },
+            { status: 500 }
+          );
+        }
+
+        await supabaseAdmin.from("invitations").update({ status: "accepted" }).eq("id", invite.id);
         await supabaseAdmin
           .from("profiles")
           .update({ status: "active" })
@@ -89,7 +122,12 @@ export const Route = createFileRoute("/api/public/agent/register")({
           .select("timezone, heartbeat_interval_seconds")
           .eq("id", invite.org_id)
           .single();
-        const schedule = await getEffectiveSchedule(supabaseAdmin, invite.org_id, invite.profile_id);
+
+        const schedule = await getEffectiveSchedule(
+          supabaseAdmin,
+          invite.org_id,
+          invite.profile_id
+        );
 
         // device_key is returned exactly once. Only its hash is stored.
         return Response.json({

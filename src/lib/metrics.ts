@@ -1,5 +1,5 @@
 // Deterministic productivity metrics.
-// AI never computes these — they are derived from raw activity sessions only.
+// Derived from raw activity sessions.
 
 export type SessionCategory = "productive" | "neutral" | "distracted";
 
@@ -22,40 +22,30 @@ export interface DailyMetrics {
   productivity_score: number;
 }
 
-// Default application classification. Agents send a category with each
-// session; when they don't, the server classifies from this table.
-const APP_CATEGORIES: Record<string, SessionCategory> = {
-  "visual studio code": "productive",
-  "figma": "productive",
-  "linear": "productive",
-  "notion": "productive",
-  "github desktop": "productive",
-  "terminal": "productive",
-  "windows terminal": "productive",
-  "intellij idea": "productive",
-  "microsoft word": "productive",
-  "microsoft excel": "productive",
-  "google docs": "productive",
-  "slack": "neutral",
-  "microsoft teams": "neutral",
-  "microsoft outlook": "neutral",
-  "google chrome": "neutral",
-  "microsoft edge": "neutral",
-  "firefox": "neutral",
-  "windows explorer": "neutral",
-  "zoom": "neutral",
-  "youtube": "distracted",
-  "twitter / x": "distracted",
-  "reddit": "distracted",
-  "netflix": "distracted",
-  "spotify": "distracted",
-  "facebook": "distracted",
-  "instagram": "distracted",
-};
-
+/**
+ * Deterministic Classification Rules:
+ * Active application usage when Windows is awake is classified as PRODUCTIVE by default.
+ * Explicit entertainment and social media platforms are classified as DISTRACTED.
+ */
 export function classifyApp(appName: string): SessionCategory {
   const key = appName.trim().toLowerCase();
-  return APP_CATEGORIES[key] ?? "neutral";
+
+  // Distracted applications
+  if (
+    key.includes("youtube") ||
+    key.includes("netflix") ||
+    key.includes("tiktok") ||
+    key.includes("twitter") ||
+    key.includes("facebook") ||
+    key.includes("instagram") ||
+    key.includes("reddit") ||
+    key.includes("spotify")
+  ) {
+    return "distracted";
+  }
+
+  // Active usage of Chrome, VS Code, ChatGPT, Word, Excel, WhatsApp, Teams, Slack, etc. is Productive
+  return "productive";
 }
 
 export function clampScore(n: number): number {
@@ -75,9 +65,7 @@ export function productivityScore(m: {
   const total = m.productive_seconds + m.neutral_seconds + m.distracted_seconds;
   if (total <= 0) return 0;
   const raw =
-    ((m.productive_seconds + m.neutral_seconds * 0.5 - m.distracted_seconds * 0.5) /
-      total) *
-    100;
+    ((m.productive_seconds + m.neutral_seconds * 0.5 - m.distracted_seconds * 0.5) / total) * 100;
   return clampScore(raw);
 }
 
@@ -132,7 +120,9 @@ export function computeDailyMetrics(sessions: RawSession[]): DailyMetrics {
       m[`${s.category}_seconds`] += s.duration_seconds;
       if (s.category === "productive") {
         if (!runStart) runStart = s.started_at;
-        runEnd = new Date(new Date(s.started_at).getTime() + s.duration_seconds * 1000).toISOString();
+        runEnd = new Date(
+          new Date(s.started_at).getTime() + s.duration_seconds * 1000,
+        ).toISOString();
       } else {
         if (runStart && runEnd) {
           m.focus_seconds = Math.max(

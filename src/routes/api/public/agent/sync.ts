@@ -1,14 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { authenticateDevice } from "@/lib/agent.server";
-import { classifyApp, computeDailyMetrics, type RawSession } from "@/lib/metrics";
+import { computeDailyMetrics, type RawSession } from "@/lib/metrics";
+import { normalizeAppName, getCanonicalClassification } from "@/lib/app-mapping";
 
 /**
  * POST /api/public/agent/sync
- * Batch upload of activity sessions collected during monitoring hours and
- * buffered in the agent's local SQLite. The server derives org/user/device
- * from the device key, filters out anything outside the shift window, and
- * recomputes deterministic daily summaries for affected days.
+ * Batch upload of application-level activity sessions collected during monitoring hours.
+ * Enforces privacy (no window titles/tab names) and applies centralized app-mapping and canonical classification.
  */
 const sessionSchema = z.object({
   app_name: z.string().min(1).max(200),
@@ -16,7 +15,7 @@ const sessionSchema = z.object({
   window_title: z.string().max(500).nullable().optional(),
   category: z.enum(["productive", "neutral", "distracted"]).optional(),
   is_idle: z.boolean().default(false),
-  started_at: z.string().datetime({ offset: true }),
+  started_at: z.string().min(10).max(60),
   duration_seconds: z.number().int().min(0).max(86400),
 });
 
@@ -32,33 +31,41 @@ export const Route = createFileRoute("/api/public/agent/sync")({
         if ("error" in result && result.error) return result.error;
         const { device, supabaseAdmin } = result as Exclude<typeof result, { error: Response }>;
         if (device.status !== "active")
-          return Response.json({ error: "Device not active", code: "DEVICE_" + device.status.toUpperCase() }, { status: 403 });
+          return Response.json(
+            { error: "Device not active", code: "DEVICE_" + device.status.toUpperCase() },
+            { status: 403 },
+          );
 
         const parsed = bodySchema.safeParse(await request.json().catch(() => null));
         if (!parsed.success) return Response.json({ error: "Invalid payload" }, { status: 400 });
 
-        const rows = parsed.data.sessions.map((s) => ({
-          org_id: device.org_id, // server-derived, never client-supplied
-          profile_id: device.profile_id,
-          device_id: device.id,
-          app_name: s.app_name,
-          process_name: s.process_name ?? null,
-          window_title: s.window_title ?? null,
-          category: s.category ?? classifyApp(s.app_name),
-          is_idle: s.is_idle,
-          started_at: s.started_at,
-          duration_seconds: s.duration_seconds,
-        }));
+        const rows = parsed.data.sessions.map((s) => {
+          const normalized = normalizeAppName(s.app_name, s.process_name);
+          const canonicalCategory = getCanonicalClassification(normalized);
+
+          return {
+            org_id: device.org_id,
+            profile_id: device.profile_id,
+            device_id: device.id,
+            app_name: normalized,
+            process_name: s.process_name ?? null,
+            window_title: null, // Privacy: Always store null for window title
+            category: canonicalCategory,
+            is_idle: s.is_idle,
+            started_at: s.started_at,
+            duration_seconds: s.duration_seconds,
+          };
+        });
 
         const { error } = await supabaseAdmin.from("activity_sessions").insert(rows);
         if (error) return Response.json({ error: "Sync failed" }, { status: 500 });
 
-        // Recompute deterministic daily summaries for affected dates.
+        // Recompute daily summaries for affected dates.
         const byDate = new Map<string, RawSession[]>();
         for (const r of rows) {
           const d = r.started_at.slice(0, 10);
           const list = byDate.get(d) ?? [];
-          list.push(r);
+          list.push(r as any);
           byDate.set(d, list);
         }
 

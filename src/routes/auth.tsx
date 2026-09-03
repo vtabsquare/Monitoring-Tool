@@ -77,7 +77,8 @@ function AuthPage() {
             {mode === "signin" ? "Admin sign in" : "Create admin account"}
           </h1>
           <p className="mt-1 text-xs text-muted-foreground">
-            Only organization administrators use the web console. Monitored users only need the desktop agent.
+            Only organization administrators use the web console. Monitored users only need the
+            desktop agent.
           </p>
 
           <form onSubmit={handleEmail} className="mt-6 space-y-4">

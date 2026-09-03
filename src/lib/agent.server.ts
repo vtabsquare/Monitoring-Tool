@@ -28,7 +28,9 @@ export async function authenticateDevice(request: Request) {
   if (error) return { error: Response.json({ error: "Lookup failed" }, { status: 500 }) };
   if (!device) return { error: Response.json({ error: "Unknown device" }, { status: 401 }) };
   if (device.status === "revoked")
-    return { error: Response.json({ error: "Device revoked", code: "DEVICE_REVOKED" }, { status: 403 }) };
+    return {
+      error: Response.json({ error: "Device revoked", code: "DEVICE_REVOKED" }, { status: 403 }),
+    };
   return { device, supabaseAdmin };
 }
 
@@ -55,14 +57,22 @@ export function isWithinShift(schedule: ScheduleRow[], now = new Date()): boolea
     const start = sh * 60 + sm;
     const end = eh * 60 + em;
 
-    if (end > start) {
+    if (start === end) {
+      // 24-hour full day shift
+      if (dow === row.day_of_week) return true;
+    } else if (end > start) {
       // Same-day window
-      if (dow === row.day_of_week && minutes >= start && minutes < end) return true;
+      if (dow === row.day_of_week && minutes >= start && minutes <= end) return true;
     } else {
       // Overnight: window belongs to row.day_of_week, spills into next day
       const prevDow = (row.day_of_week + 6) % 7;
       if (dow === row.day_of_week && minutes >= start) return true;
-      if (dow === (row.day_of_week + 1) % 7 && minutes < end && scheduleEnabledOn(schedule, row.day_of_week)) return true;
+      if (
+        dow === (row.day_of_week + 1) % 7 &&
+        minutes <= end &&
+        scheduleEnabledOn(schedule, row.day_of_week)
+      )
+        return true;
       void prevDow;
     }
   }

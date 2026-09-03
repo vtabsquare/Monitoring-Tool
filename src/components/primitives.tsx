@@ -40,7 +40,9 @@ export function KpiCard({
 }) {
   return (
     <Card>
-      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{label}</p>
+      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+        {label}
+      </p>
       <p className="mt-3 font-mono text-3xl font-medium tracking-tight text-foreground">{value}</p>
       {(delta || sub) && (
         <p className="mt-1 text-xs text-muted-foreground">

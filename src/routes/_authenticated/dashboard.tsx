@@ -3,8 +3,19 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  BarChart, Bar, PieChart, Pie, Cell, Legend,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
 } from "recharts";
 import { getDashboardData, getAppUsage } from "@/lib/analytics.functions";
 import { listAiReports } from "@/lib/insights.functions";
@@ -15,7 +26,10 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
       { title: "Dashboard — Aetherium" },
-      { name: "description", content: "Organization-wide productivity telemetry and monitoring status." },
+      {
+        name: "description",
+        content: "Organization-wide productivity telemetry and monitoring status.",
+      },
     ],
   }),
   component: DashboardPage,
@@ -122,9 +136,20 @@ function DashboardPage() {
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
         <KpiCard label="Org productivity" value={`${kpis.org_productivity}%`} />
         <KpiCard label="Focus score" value={`${kpis.focus_score}%`} />
-        <KpiCard label="Active users" value={String(kpis.active_users)} sub={`of ${kpis.total_users} total`} />
-        <KpiCard label="Devices live" value={String(kpis.devices_online)} sub={`of ${kpis.total_devices} enrolled`} />
-        <KpiCard label="Focus time today" value={`${Math.round(kpis.focus_seconds_today / 360) / 10}h`} />
+        <KpiCard
+          label="Active users"
+          value={String(kpis.active_users)}
+          sub={`of ${kpis.total_users} total`}
+        />
+        <KpiCard
+          label="Devices live"
+          value={String(kpis.devices_online)}
+          sub={`of ${kpis.total_devices} enrolled`}
+        />
+        <KpiCard
+          label="Productive Hours"
+          value={`${Math.round(kpis.focus_seconds_today / 360) / 10}h`}
+        />
         <KpiCard
           label="Pending invites"
           value={String(kpis.pending_invites)}
@@ -140,14 +165,43 @@ function DashboardPage() {
             <ResponsiveContainer>
               <AreaChart data={trend} margin={{ left: -20, right: 8, top: 8 }}>
                 <CartesianGrid stroke="#1F242B" vertical={false} />
-                <XAxis dataKey="date" tick={{ fontSize: 10, fill: "#6B7280" }} tickLine={false} axisLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: "#6B7280" }} tickLine={false} axisLine={false} domain={[0, 100]} />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fontSize: 10, fill: "#6B7280" }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 10, fill: "#6B7280" }}
+                  tickLine={false}
+                  axisLine={false}
+                  domain={[0, 100]}
+                />
                 <Tooltip
-                  contentStyle={{ background: "#12151A", border: "1px solid #1F242B", borderRadius: 8, fontSize: 12 }}
+                  contentStyle={{
+                    background: "#12151A",
+                    border: "1px solid #1F242B",
+                    borderRadius: 8,
+                    fontSize: 12,
+                  }}
                   labelStyle={{ color: "#9CA3AF" }}
                 />
-                <Area type="monotone" dataKey="productivity" stroke="#6EA8FE" strokeWidth={2} fill="#6EA8FE" fillOpacity={0.12} />
-                <Area type="monotone" dataKey="focus" stroke="#2EE59D" strokeWidth={1.5} fill="#2EE59D" fillOpacity={0.08} />
+                <Area
+                  type="monotone"
+                  dataKey="productivity"
+                  stroke="#6EA8FE"
+                  strokeWidth={2}
+                  fill="#6EA8FE"
+                  fillOpacity={0.12}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="focus"
+                  stroke="#2EE59D"
+                  strokeWidth={1.5}
+                  fill="#2EE59D"
+                  fillOpacity={0.08}
+                />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -169,10 +223,17 @@ function DashboardPage() {
                   </Pie>
                   <Legend
                     verticalAlign="bottom"
-                    formatter={(v: string) => <span style={{ color: "#9CA3AF", fontSize: 11 }}>{v}</span>}
+                    formatter={(v: string) => (
+                      <span style={{ color: "#9CA3AF", fontSize: 11 }}>{v}</span>
+                    )}
                   />
                   <Tooltip
-                    contentStyle={{ background: "#12151A", border: "1px solid #1F242B", borderRadius: 8, fontSize: 12 }}
+                    contentStyle={{
+                      background: "#12151A",
+                      border: "1px solid #1F242B",
+                      borderRadius: 8,
+                      fontSize: 12,
+                    }}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -188,13 +249,33 @@ function DashboardPage() {
             <ResponsiveContainer>
               <BarChart data={departments} margin={{ left: -20, right: 8, top: 8 }}>
                 <CartesianGrid stroke="#1F242B" vertical={false} />
-                <XAxis dataKey="name" tick={{ fontSize: 10, fill: "#6B7280" }} tickLine={false} axisLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: "#6B7280" }} tickLine={false} axisLine={false} domain={[0, 100]} />
+                <XAxis
+                  dataKey="name"
+                  tick={{ fontSize: 10, fill: "#6B7280" }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 10, fill: "#6B7280" }}
+                  tickLine={false}
+                  axisLine={false}
+                  domain={[0, 100]}
+                />
                 <Tooltip
-                  contentStyle={{ background: "#12151A", border: "1px solid #1F242B", borderRadius: 8, fontSize: 12 }}
+                  contentStyle={{
+                    background: "#12151A",
+                    border: "1px solid #1F242B",
+                    borderRadius: 8,
+                    fontSize: 12,
+                  }}
                   cursor={{ fill: "#1F242B", opacity: 0.3 }}
                 />
-                <Bar dataKey="avgProductivity" name="Productivity" fill="#6EA8FE" radius={[4, 4, 0, 0]} />
+                <Bar
+                  dataKey="avgProductivity"
+                  name="Productivity"
+                  fill="#6EA8FE"
+                  radius={[4, 4, 0, 0]}
+                />
                 <Bar dataKey="avgFocus" name="Focus" fill="#2EE59D" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -218,7 +299,9 @@ function DashboardPage() {
                     <p className="text-sm font-medium text-foreground">{r.title}</p>
                     <Badge tone={r.scope === "org" ? "primary" : "info"}>{r.scope}</Badge>
                   </div>
-                  <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{r.summary}</p>
+                  <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
+                    {r.summary}
+                  </p>
                 </div>
               ))}
             </div>
@@ -232,7 +315,12 @@ function DashboardPage() {
           <ResponsiveContainer>
             <BarChart data={topApps} layout="vertical" margin={{ left: 60, right: 24, top: 0 }}>
               <CartesianGrid stroke="#1F242B" horizontal={false} />
-              <XAxis type="number" tick={{ fontSize: 10, fill: "#6B7280" }} tickLine={false} axisLine={false} />
+              <XAxis
+                type="number"
+                tick={{ fontSize: 10, fill: "#6B7280" }}
+                tickLine={false}
+                axisLine={false}
+              />
               <YAxis
                 type="category"
                 dataKey="app_name"
@@ -242,7 +330,12 @@ function DashboardPage() {
                 width={120}
               />
               <Tooltip
-                contentStyle={{ background: "#12151A", border: "1px solid #1F242B", borderRadius: 8, fontSize: 12 }}
+                contentStyle={{
+                  background: "#12151A",
+                  border: "1px solid #1F242B",
+                  borderRadius: 8,
+                  fontSize: 12,
+                }}
                 cursor={{ fill: "#1F242B", opacity: 0.3 }}
               />
               <Bar dataKey="hours" name="Hours" fill="#4F7CFF" radius={[0, 4, 4, 0]} />

@@ -12,8 +12,8 @@ const shiftSchema = z.object({
       z.object({
         day_of_week: z.number().int().min(0).max(6),
         enabled: z.boolean(),
-        start_time: z.string().regex(/^\d{2}:\d{2}$/),
-        end_time: z.string().regex(/^\d{2}:\d{2}$/),
+        start_time: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/),
+        end_time: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/),
       }),
     )
     .length(7),
@@ -92,7 +92,13 @@ export const addUser = createServerFn({ method: "POST" })
 
     const { data: invite } = await context.supabase
       .from("invitations")
-      .insert({ org_id: orgId, profile_id: profile.id, email: data.email.toLowerCase(), status: "sent", invited_by: context.userId })
+      .insert({
+        org_id: orgId,
+        profile_id: profile.id,
+        email: data.email.toLowerCase(),
+        status: "sent",
+        invited_by: context.userId,
+      })
       .select("token")
       .single();
 
@@ -106,8 +112,15 @@ export const addUser = createServerFn({ method: "POST" })
       metadata: { email: data.email.toLowerCase() },
     });
 
-    // In production this triggers an email containing the Windows agent
-    // installer link + this registration token.
+    if (invite?.token) {
+      const { sendInvitationEmail } = await import("./email.server");
+      await sendInvitationEmail({
+        recipientEmail: data.email.toLowerCase(),
+        recipientName: data.full_name,
+        invitationToken: invite.token,
+      });
+    }
+
     return { id: profile.id as string, invitationToken: invite?.token as string };
   });
 
@@ -163,15 +176,19 @@ export const saveUserShift = createServerFn({ method: "POST" })
       .eq("profile_id", data.profile_id)
       .eq("org_id", orgId);
     const { error } = await context.supabase.from("monitoring_schedules").insert(
-      data.shift.days.map((d) => ({
-        org_id: orgId,
-        profile_id: data.profile_id,
-        day_of_week: d.day_of_week,
-        enabled: d.enabled,
-        start_time: d.start_time,
-        end_time: d.end_time,
-        timezone: data.shift.timezone,
-      })),
+      data.shift.days.map((d) => {
+        const start = d.start_time.slice(0, 5) + ":00";
+        const end = d.end_time.slice(0, 5) + ":00";
+        return {
+          org_id: orgId,
+          profile_id: data.profile_id,
+          day_of_week: d.day_of_week,
+          enabled: d.enabled,
+          start_time: start,
+          end_time: end,
+          timezone: data.shift.timezone,
+        };
+      }),
     );
     if (error) throw new Error(error.message);
     await audit(context.supabase, {
@@ -226,6 +243,16 @@ export const resendInvitation = createServerFn({ method: "POST" })
       entityId: data.profile_id,
       metadata: { email: invite.email },
     });
+
+    if (invite?.token) {
+      const { sendInvitationEmail } = await import("./email.server");
+      await sendInvitationEmail({
+        recipientEmail: invite.email,
+        recipientName: invite.email.split("@")[0],
+        invitationToken: invite.token,
+      });
+    }
+
     return { ok: true, token: invite.token as string };
   });
 
@@ -241,6 +268,39 @@ export const listAuditLogs = createServerFn({ method: "GET" })
       .limit(200);
     if (error) throw new Error(error.message);
     return data ?? [];
+  });
+
+export const deleteUser = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) => z.object({ id: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    const { orgId } = await requireAdminOrg(context.supabase, context.userId);
+    const { id } = data;
+
+    await Promise.all([
+      context.supabase.from("invitations").delete().eq("profile_id", id).eq("org_id", orgId),
+      context.supabase.from("devices").delete().eq("profile_id", id).eq("org_id", orgId),
+      context.supabase.from("monitoring_schedules").delete().eq("profile_id", id).eq("org_id", orgId),
+      context.supabase.from("activity_sessions").delete().eq("profile_id", id).eq("org_id", orgId),
+      context.supabase.from("daily_summaries").delete().eq("profile_id", id).eq("org_id", orgId),
+    ]);
+
+    const { error } = await context.supabase
+      .from("profiles")
+      .delete()
+      .eq("id", id)
+      .eq("org_id", orgId);
+    if (error) throw new Error(error.message);
+
+    await audit(context.supabase, {
+      orgId,
+      actorId: context.userId,
+      actorEmail: context.claims.email ?? "unknown",
+      action: "user.deleted",
+      entityType: "profile",
+      entityId: id,
+    });
+    return { ok: true };
   });
 
 export const WEEKDAYS = DAYS;

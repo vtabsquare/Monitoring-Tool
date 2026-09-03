@@ -18,7 +18,10 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const NAV: { group: string; items: { to: string; label: string; icon: typeof LayoutDashboard }[] }[] = [
+const NAV: {
+  group: string;
+  items: { to: string; label: string; icon: typeof LayoutDashboard }[];
+}[] = [
   {
     group: "Overview",
     items: [
@@ -115,7 +118,9 @@ export function AppShell({ orgName }: { orgName?: string }) {
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-xs font-medium">{email || "Admin"}</p>
-              <p className="truncate text-[10px] text-muted-foreground">{orgName ?? "Organization"}</p>
+              <p className="truncate text-[10px] text-muted-foreground">
+                {orgName ?? "Organization"}
+              </p>
             </div>
             <button
               onClick={handleSignOut}
