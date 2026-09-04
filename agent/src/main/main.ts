@@ -50,6 +50,7 @@ function handleSquirrelEvents(): boolean {
 
 if (handleSquirrelEvents()) {
   // Exit early only for background installer/uninstaller tasks
+  process.exit(0);
 }
 
 import { SQLiteService } from "./services/SQLiteService";
