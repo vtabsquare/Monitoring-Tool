@@ -16,7 +16,7 @@ export async function sendInvitationEmail({
   recipientName,
   invitationToken,
   orgName = "VTAB SQUARE",
-  serverUrl = process.env.APP_URL || "http://localhost:8080",
+  serverUrl = process.env.APP_URL || process.env.RENDER_EXTERNAL_URL || "http://localhost:8080",
 }: OnboardingEmailParams): Promise<{ success: boolean; error?: string }> {
   let apiKey = process.env.BREVO_API_KEY;
   let senderEmail = process.env.BREVO_SENDER_EMAIL || "noreply@vtabsquare.com";

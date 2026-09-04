@@ -10,6 +10,17 @@ export const Route = createFileRoute("/api/public/agent/download")({
   server: {
     handlers: {
       GET: async () => {
+        // If an external download URL is provided (Required for Production/Render)
+        if (process.env.AGENT_DOWNLOAD_URL) {
+          return new Response(null, {
+            status: 302,
+            headers: {
+              Location: process.env.AGENT_DOWNLOAD_URL,
+            },
+          });
+        }
+
+        // Fallback for local development
         const installerPath = path.resolve(
           process.cwd(),
           "agent/release/installer/FlowFocusDesktopAgentSetup.exe",
