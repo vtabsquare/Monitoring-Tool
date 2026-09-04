@@ -22,7 +22,7 @@ export async function authenticateDevice(request: Request) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data: device, error } = await supabaseAdmin
     .from("devices")
-    .select("id, org_id, profile_id, name, status, agent_version")
+    .select("id, org_id, profile_id, name, status, agent_version, monitoring_state")
     .eq("device_key_hash", hashDeviceKey(key))
     .maybeSingle();
   if (error) return { error: Response.json({ error: "Lookup failed" }, { status: 500 }) };

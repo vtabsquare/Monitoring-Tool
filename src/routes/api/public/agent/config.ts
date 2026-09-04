@@ -29,6 +29,7 @@ export const Route = createFileRoute("/api/public/agent/config")({
           sync_interval_seconds: 900,
           schedule,
           monitoring_now: device.status === "active" && isWithinShift(schedule),
+          monitoring_state: device.monitoring_state,
           status: device.status,
           privacy: {
             collects: ["app_name", "process_name", "window_title", "duration", "idle_state"],

@@ -514,6 +514,7 @@ export type Database = {
           created_at: string;
           department_id: string | null;
           email: string;
+          external_id: string | null;
           full_name: string;
           id: string;
           job_role: string | null;
@@ -525,6 +526,7 @@ export type Database = {
           created_at?: string;
           department_id?: string | null;
           email: string;
+          external_id?: string | null;
           full_name: string;
           id?: string;
           job_role?: string | null;
@@ -536,6 +538,7 @@ export type Database = {
           created_at?: string;
           department_id?: string | null;
           email?: string;
+          external_id?: string | null;
           full_name?: string;
           id?: string;
           job_role?: string | null;

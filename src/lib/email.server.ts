@@ -18,9 +18,28 @@ export async function sendInvitationEmail({
   orgName = "VTAB SQUARE",
   serverUrl = process.env.APP_URL || "http://localhost:8080",
 }: OnboardingEmailParams): Promise<{ success: boolean; error?: string }> {
-  const apiKey = process.env.BREVO_API_KEY;
-  const senderEmail = process.env.BREVO_SENDER_EMAIL || "noreply@vtabsquare.com";
-  const senderName = process.env.BREVO_SENDER_NAME || "VTAB SQUARE Monitoring";
+  let apiKey = process.env.BREVO_API_KEY;
+  let senderEmail = process.env.BREVO_SENDER_EMAIL || "noreply@vtabsquare.com";
+  let senderName = process.env.BREVO_SENDER_NAME || "VTAB SQUARE Monitoring";
+
+  if (!apiKey) {
+    try {
+      const fs = await import("fs");
+      const path = await import("path");
+      const envPath = path.resolve(process.cwd(), ".env");
+      if (fs.existsSync(envPath)) {
+        const envContent = fs.readFileSync(envPath, "utf-8");
+        const apiKeyMatch = envContent.match(/BREVO_API_KEY="([^"]+)"/);
+        if (apiKeyMatch) apiKey = apiKeyMatch[1];
+        const emailMatch = envContent.match(/BREVO_SENDER_EMAIL="([^"]+)"/);
+        if (emailMatch) senderEmail = emailMatch[1];
+        const nameMatch = envContent.match(/BREVO_SENDER_NAME="([^"]+)"/);
+        if (nameMatch) senderName = nameMatch[1];
+      }
+    } catch (e) {
+      // Ignore FS errors
+    }
+  }
 
   const downloadUrl = `${serverUrl}/api/public/agent/download`;
 
@@ -184,8 +203,9 @@ export async function sendInvitationEmail({
       },
       body: JSON.stringify({
         sender: { name: senderName, email: senderEmail },
+        replyTo: { name: senderName, email: senderEmail },
         to: [{ email: recipientEmail, name: recipientName }],
-        subject: `Welcome ${recipientName}! Complete Your Monitoring Agent Setup`,
+        subject: `Welcome ${recipientName}! Complete Your Monitoring Agent Setup [${new Date().toLocaleTimeString()}]`,
         htmlContent,
       }),
     });

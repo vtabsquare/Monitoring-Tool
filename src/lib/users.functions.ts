@@ -112,16 +112,21 @@ export const addUser = createServerFn({ method: "POST" })
       metadata: { email: data.email.toLowerCase() },
     });
 
+    let emailSent = false;
+    let emailError: string | undefined;
+
     if (invite?.token) {
       const { sendInvitationEmail } = await import("./email.server");
-      await sendInvitationEmail({
+      const emailResult = await sendInvitationEmail({
         recipientEmail: data.email.toLowerCase(),
         recipientName: data.full_name,
         invitationToken: invite.token,
       });
+      emailSent = emailResult.success;
+      emailError = emailResult.error;
     }
 
-    return { id: profile.id as string, invitationToken: invite?.token as string };
+    return { id: profile.id as string, invitationToken: invite?.token as string, emailSent, emailError };
   });
 
 export const updateUser = createServerFn({ method: "POST" })

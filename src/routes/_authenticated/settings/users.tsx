@@ -44,9 +44,16 @@ function UsersPage() {
   });
 
   const [addOpen, setAddOpen] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
   const [editUserObj, setEditUserObj] = useState<any | null>(null);
   const [shiftUser, setShiftUser] = useState<{ id: string; name: string } | null>(null);
-  const [createdInvite, setCreatedInvite] = useState<{ name: string; email: string; token: string } | null>(null);
+  const [createdInvite, setCreatedInvite] = useState<{
+    name: string;
+    email: string;
+    token: string;
+    emailSent?: boolean;
+    emailError?: string;
+  } | null>(null);
   const [copied, setCopied] = useState(false);
 
   const [addForm, setAddForm] = useState({ full_name: "", email: "", job_role: "", department_id: "" });
@@ -80,6 +87,8 @@ function UsersPage() {
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
+    if (isAdding) return;
+    setIsAdding(true);
     try {
       const res = await runAddUser({
         data: {
@@ -96,15 +105,27 @@ function UsersPage() {
           },
         },
       });
-      toast.success("User added & onboarding email automatically sent!");
+      if (res.emailSent === false) {
+        toast.warning(`User added, but email failed to send.`);
+      } else {
+        toast.success("User added & onboarding email automatically sent! (Check spam folder)");
+      }
       setAddOpen(false);
       if (res.invitationToken) {
-        setCreatedInvite({ name: addForm.full_name, email: addForm.email, token: res.invitationToken });
+        setCreatedInvite({
+          name: addForm.full_name,
+          email: addForm.email,
+          token: res.invitationToken,
+          emailSent: res.emailSent,
+          emailError: res.emailError,
+        });
       }
       setAddForm({ full_name: "", email: "", job_role: "", department_id: "" });
       invalidate();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to add user");
+    } finally {
+      setIsAdding(false);
     }
   }
 
@@ -356,9 +377,10 @@ function UsersPage() {
               </button>
               <button
                 type="submit"
-                className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+                disabled={isAdding}
+                className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
               >
-                Create User & Send Email
+                {isAdding ? "Adding..." : "Create User & Send Email"}
               </button>
             </div>
           </form>
@@ -461,14 +483,39 @@ function UsersPage() {
       {createdInvite && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-background/70 backdrop-blur-sm">
           <div className="w-full max-w-lg space-y-4 rounded-xl border border-border bg-card p-6 shadow-2xl">
-            <div className="flex items-center gap-2 text-success font-semibold text-sm">
-              <Mail className="size-4" />
-              <span>Onboarding Email Dispatched Automatically</span>
-            </div>
-            
-            <p className="text-xs text-muted-foreground">
-              User <strong className="text-foreground">{createdInvite.name}</strong> ({createdInvite.email}) has been created. An onboarding email containing the setup steps, activation token, and desktop agent EXE installer download link has been dispatched.
-            </p>
+            {createdInvite.emailSent === false ? (
+              <>
+                <div className="flex items-center gap-2 text-destructive font-semibold text-sm">
+                  <Mail className="size-4" />
+                  <span>Email Dispatch Failed</span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  User <strong className="text-foreground">{createdInvite.name}</strong> ({createdInvite.email}) has been created, but we could not automatically send the onboarding email.
+                </p>
+                <div className="rounded border border-destructive/20 bg-destructive/10 p-3 text-xs text-destructive">
+                  <strong>Error:</strong> {createdInvite.emailError || "Unknown error"}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Please securely share the Activation Token and download instructions with the user manually.
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center gap-2 text-success font-semibold text-sm">
+                  <Mail className="size-4" />
+                  <span>Onboarding Email Dispatched Automatically</span>
+                </div>
+                
+                <p className="text-xs text-muted-foreground mt-2">
+                  User <strong className="text-foreground">{createdInvite.name}</strong> ({createdInvite.email}) has been created. An onboarding email containing the setup steps, activation token, and desktop agent EXE installer download link has been dispatched.
+                </p>
+                <div className="rounded border border-warning/20 bg-warning/10 p-2 mt-2">
+                  <p className="text-xs text-warning font-semibold">
+                    Note: If the user doesn't see the email, ask them to check their Spam or Junk folder! (Emails sent via third-party services often go to spam).
+                  </p>
+                </div>
+              </>
+            )}
 
             <div className="space-y-2">
               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Unique Activation Token</label>

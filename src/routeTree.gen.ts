@@ -24,6 +24,7 @@ import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authen
 import { Route as AuthenticatedSettingsAuditLogsRouteImport } from './routes/_authenticated/settings/audit-logs'
 import { Route as AuthenticatedSettingsReportsRouteImport } from './routes/_authenticated/settings/reports'
 import { Route as AuthenticatedSettingsUsersRouteImport } from './routes/_authenticated/settings/users'
+import { Route as ApiExternalOfficehubMonitoringStateRouteImport } from './routes/api/external/officehub/monitoring-state'
 import { Route as ApiPublicAgentConfigRouteImport } from './routes/api/public/agent/config'
 import { Route as ApiPublicAgentDownloadRouteImport } from './routes/api/public/agent/download'
 import { Route as ApiPublicAgentHeartbeatRouteImport } from './routes/api/public/agent/heartbeat'
@@ -110,6 +111,12 @@ const AuthenticatedSettingsUsersRoute =
     path: '/users',
     getParentRoute: () => AuthenticatedSettingsRoute,
   } as any)
+const ApiExternalOfficehubMonitoringStateRoute =
+  ApiExternalOfficehubMonitoringStateRouteImport.update({
+    id: '/api/external/officehub/monitoring-state',
+    path: '/api/external/officehub/monitoring-state',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicAgentConfigRoute = ApiPublicAgentConfigRouteImport.update({
   id: '/api/public/agent/config',
   path: '/api/public/agent/config',
@@ -156,6 +163,7 @@ export interface FileRoutesByFullPath {
   '/settings/reports': typeof AuthenticatedSettingsReportsRoute
   '/settings/users': typeof AuthenticatedSettingsUsersRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/api/external/officehub/monitoring-state': typeof ApiExternalOfficehubMonitoringStateRoute
   '/api/public/agent/config': typeof ApiPublicAgentConfigRoute
   '/api/public/agent/download': typeof ApiPublicAgentDownloadRoute
   '/api/public/agent/heartbeat': typeof ApiPublicAgentHeartbeatRoute
@@ -177,6 +185,7 @@ export interface FileRoutesByTo {
   '/settings/reports': typeof AuthenticatedSettingsReportsRoute
   '/settings/users': typeof AuthenticatedSettingsUsersRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
+  '/api/external/officehub/monitoring-state': typeof ApiExternalOfficehubMonitoringStateRoute
   '/api/public/agent/config': typeof ApiPublicAgentConfigRoute
   '/api/public/agent/download': typeof ApiPublicAgentDownloadRoute
   '/api/public/agent/heartbeat': typeof ApiPublicAgentHeartbeatRoute
@@ -201,6 +210,7 @@ export interface FileRoutesById {
   '/_authenticated/settings/reports': typeof AuthenticatedSettingsReportsRoute
   '/_authenticated/settings/users': typeof AuthenticatedSettingsUsersRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/api/external/officehub/monitoring-state': typeof ApiExternalOfficehubMonitoringStateRoute
   '/api/public/agent/config': typeof ApiPublicAgentConfigRoute
   '/api/public/agent/download': typeof ApiPublicAgentDownloadRoute
   '/api/public/agent/heartbeat': typeof ApiPublicAgentHeartbeatRoute
@@ -225,6 +235,7 @@ export interface FileRouteTypes {
     | '/settings/reports'
     | '/settings/users'
     | '/settings/'
+    | '/api/external/officehub/monitoring-state'
     | '/api/public/agent/config'
     | '/api/public/agent/download'
     | '/api/public/agent/heartbeat'
@@ -246,6 +257,7 @@ export interface FileRouteTypes {
     | '/settings/reports'
     | '/settings/users'
     | '/settings'
+    | '/api/external/officehub/monitoring-state'
     | '/api/public/agent/config'
     | '/api/public/agent/download'
     | '/api/public/agent/heartbeat'
@@ -269,6 +281,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/reports'
     | '/_authenticated/settings/users'
     | '/_authenticated/settings/'
+    | '/api/external/officehub/monitoring-state'
     | '/api/public/agent/config'
     | '/api/public/agent/download'
     | '/api/public/agent/heartbeat'
@@ -282,6 +295,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   OnboardingRoute: typeof OnboardingRoute
+  ApiExternalOfficehubMonitoringStateRoute: typeof ApiExternalOfficehubMonitoringStateRoute
   ApiPublicAgentConfigRoute: typeof ApiPublicAgentConfigRoute
   ApiPublicAgentDownloadRoute: typeof ApiPublicAgentDownloadRoute
   ApiPublicAgentHeartbeatRoute: typeof ApiPublicAgentHeartbeatRoute
@@ -397,6 +411,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsUsersRouteImport
       parentRoute: typeof AuthenticatedSettingsRoute
     }
+    '/api/external/officehub/monitoring-state': {
+      id: '/api/external/officehub/monitoring-state'
+      path: '/api/external/officehub/monitoring-state'
+      fullPath: '/api/external/officehub/monitoring-state'
+      preLoaderRoute: typeof ApiExternalOfficehubMonitoringStateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/agent/config': {
       id: '/api/public/agent/config'
       path: '/api/public/agent/config'
@@ -489,6 +510,8 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   OnboardingRoute: OnboardingRoute,
+  ApiExternalOfficehubMonitoringStateRoute:
+    ApiExternalOfficehubMonitoringStateRoute,
   ApiPublicAgentConfigRoute: ApiPublicAgentConfigRoute,
   ApiPublicAgentDownloadRoute: ApiPublicAgentDownloadRoute,
   ApiPublicAgentHeartbeatRoute: ApiPublicAgentHeartbeatRoute,
