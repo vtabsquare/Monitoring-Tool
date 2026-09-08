@@ -1,7 +1,11 @@
-import { app, BrowserWindow, Tray, Menu, ipcMain, powerMonitor } from "electron";
+import { app, BrowserWindow, Tray, Menu, ipcMain, powerMonitor, Notification, shell, dialog, net } from "electron";
 import path from "path";
 import fs from "fs";
 import { execFile } from "child_process";
+
+if (process.platform === "win32") {
+  app.setAppUserModelId("com.vtabsquare.flowfocusagent");
+}
 
 // Enforce single instance lock to prevent duplicate background processes
 const gotTheLock = app.requestSingleInstanceLock();
@@ -86,6 +90,45 @@ async function startAgentLoop() {
   }
 
   // Fetch shift configuration from server
+  scheduleService.onMonitoringStateChange = (state: string) => {
+    console.log(`[MONITORING] Server state: ${state}`);
+    if (state === "paused") {
+      stopTelemetry();
+    } else {
+      startTelemetry();
+    }
+  };
+
+  scheduleService.onFaceAuthAlert = (alertData) => {
+    console.log(`[MONITORING] Face Auth Alert received: ${alertData.level}`);
+    
+    // Always show an aggressive modal dialog to ensure they see it, especially in local testing
+    dialog.showMessageBox({
+      type: 'warning',
+      title: 'Face Verification Required',
+      message: 'Your verification session has expired.',
+      detail: 'Please open OfficeHub360 to verify your face. Your productivity tracking is suspended until verified.',
+      buttons: ['Verify Now', 'Remind Me Later'],
+      defaultId: 0
+    }).then((result) => {
+      if (result.response === 0) {
+        shell.openExternal(alertData.url);
+      }
+    });
+
+    if (Notification.isSupported()) {
+      const notification = new Notification({
+        title: "Face Verification Required",
+        body: "Your verification session has expired. Please click here to verify your face in OfficeHub360.",
+        icon: path.join(__dirname, "../../assets/icon.png")
+      });
+      notification.on("click", () => {
+        shell.openExternal(alertData.url);
+      });
+      notification.show();
+    }
+  };
+
   const creds = authService.getCredentials();
   if (creds) {
     try {
@@ -105,20 +148,37 @@ async function startAgentLoop() {
   heartbeatService.start(10);
   syncService.start(5);
 
-  // Start 1-second telemetry collection loop ONLY if currently inside shift hours
-  if (collectionTimer) clearInterval(collectionTimer);
+  function startTelemetry() {
+    if (collectionTimer) return;
+    console.log("[MONITORING] Collection resumed by server state");
+    collectionTimer = setInterval(async () => {
+      const isShiftActive = scheduleService.isWithinShift();
 
-  collectionTimer = setInterval(async () => {
-    const isShiftActive = scheduleService.isWithinShift();
+      if (isShiftActive) {
+        const { isIdle } = idleDetector.getSystemIdleState();
+        const observation = await collectorService.getActiveWindow();
+        sessionEngine.processObservation(observation, isIdle);
+      } else {
+        sessionEngine.flushCurrentSession();
+      }
+    }, 1000);
+  }
 
-    if (isShiftActive) {
-      const { isIdle } = idleDetector.getSystemIdleState();
-      const observation = await collectorService.getActiveWindow();
-      sessionEngine.processObservation(observation, isIdle);
-    } else {
+  function stopTelemetry() {
+    if (collectionTimer) {
+      console.log("[MONITORING] Collection paused by server state");
+      clearInterval(collectionTimer);
+      collectionTimer = null;
       sessionEngine.flushCurrentSession();
     }
-  }, 1000);
+  }
+
+  const currentState = scheduleService.getMonitoringState();
+  if (currentState === "paused") {
+    stopTelemetry();
+  } else {
+    startTelemetry();
+  }
 }
 
 function showOnboardingWindow() {
@@ -152,14 +212,18 @@ function showOnboardingWindow() {
   }
 }
 
-function createTray() {
+function updateTray(isOnline: boolean) {
   try {
     const iconPath = path.join(__dirname, "../../assets/icon.png");
     if (fs.existsSync(iconPath)) {
+      const statusLabel = isOnline 
+        ? "🟢 Status: Active & Monitoring" 
+        : "🔴 Status: Offline (Monitoring Locally)";
+        
       const contextMenu = Menu.buildFromTemplate([
         { label: "Flow Focus Desktop Agent (v1.0.0)", enabled: false },
         { type: "separator" },
-        { label: "Status: Active & Monitoring", enabled: false },
+        { label: statusLabel, enabled: false },
         { type: "separator" },
         {
           label: "Quit Agent",
@@ -169,12 +233,15 @@ function createTray() {
           },
         },
       ]);
-      tray = new Tray(iconPath);
-      tray.setToolTip("Flow Focus Telemetry Agent");
+      
+      if (!tray) {
+        tray = new Tray(iconPath);
+      }
+      tray.setToolTip(isOnline ? "Flow Focus - Online" : "Flow Focus - Offline");
       tray.setContextMenu(contextMenu);
     }
   } catch (err) {
-    console.warn("[Tray] System tray initialization skipped:", err);
+    console.error("Failed to update tray", err);
   }
 }
 
@@ -202,7 +269,40 @@ ipcMain.handle("register-token", async (_: unknown, { token, serverUrl }: { toke
 
 // App Lifecycle & Windows Power Event Management
 app.whenReady().then(() => {
-  createTray();
+  // Initialize tray with current network state
+  let lastOnlineState = net.isOnline();
+  updateTray(lastOnlineState);
+
+  // Poll network status every 3 seconds to instantly detect changes
+  setInterval(() => {
+    const currentOnlineState = net.isOnline();
+    if (currentOnlineState !== lastOnlineState) {
+      lastOnlineState = currentOnlineState;
+      if (currentOnlineState) {
+        console.log("[Network] Device is back online. Syncing will resume.");
+        updateTray(true);
+        if (Notification.isSupported()) {
+          const notification = new Notification({
+            title: "Network Restored",
+            body: "You are back online. Flow Focus will now sync your offline data.",
+            icon: path.join(__dirname, "../../assets/icon.png")
+          });
+          notification.show();
+        }
+      } else {
+        console.log("[Network] Device went offline. Monitoring continues locally.");
+        updateTray(false);
+        if (Notification.isSupported()) {
+          const notification = new Notification({
+            title: "Network Disconnected",
+            body: "Your device is offline. Flow Focus is continuing to record your productivity locally.",
+            icon: path.join(__dirname, "../../assets/icon.png")
+          });
+          notification.show();
+        }
+      }
+    }
+  }, 3000);
 
   // Listen to Windows power monitor events
   powerMonitor.on("suspend", () => {

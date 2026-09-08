@@ -31,6 +31,9 @@ export const Route = createFileRoute("/api/public/agent/config")({
           monitoring_now: device.status === "active" && isWithinShift(schedule),
           monitoring_state: device.monitoring_state,
           status: device.status,
+          face_auth_alert_at: device.face_auth_alert_at,
+          face_auth_alert_level: device.face_auth_alert_level,
+          face_auth_verify_url: device.face_auth_verify_url,
           privacy: {
             collects: ["app_name", "process_name", "window_title", "duration", "idle_state"],
             never_collects: ["screenshots", "keystrokes", "passwords", "clipboard"],

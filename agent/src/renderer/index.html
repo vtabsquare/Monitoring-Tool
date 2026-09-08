@@ -158,8 +158,7 @@
       btn.textContent = "Activating...";
 
       try {
-        // Use production server URL for the built agent
-        const defaultServerUrl = "https://monitoring-tool-ve9o.onrender.com";
+        const defaultServerUrl = "http://localhost:8080";
         const result = await window.electronAPI.registerToken(token, defaultServerUrl);
         if (!result.success) {
           errorEl.textContent = result.error || "Device activation failed. Please check your activation code.";

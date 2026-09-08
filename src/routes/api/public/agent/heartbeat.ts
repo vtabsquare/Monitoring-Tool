@@ -28,7 +28,15 @@ export const Route = createFileRoute("/api/public/agent/heartbeat")({
           device.profile_id,
         );
         const inShift = device.status === "active" && isWithinShift(schedule);
-        const monitoring = device.status === "paused" ? "paused" : inShift ? "active" : "off_shift";
+        
+        let monitoring = device.monitoring_state;
+        if (device.status === "paused") {
+          monitoring = "paused";
+        } else if (device.monitoring_state === "paused") {
+          monitoring = "paused";
+        } else {
+          monitoring = inShift ? "active" : "off_shift";
+        }
 
         await supabaseAdmin
           .from("devices")

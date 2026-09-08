@@ -24,6 +24,7 @@ import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authen
 import { Route as AuthenticatedSettingsAuditLogsRouteImport } from './routes/_authenticated/settings/audit-logs'
 import { Route as AuthenticatedSettingsReportsRouteImport } from './routes/_authenticated/settings/reports'
 import { Route as AuthenticatedSettingsUsersRouteImport } from './routes/_authenticated/settings/users'
+import { Route as ApiExternalOfficehubFaceVerificationAlertRouteImport } from './routes/api/external/officehub/face-verification-alert'
 import { Route as ApiExternalOfficehubMonitoringStateRouteImport } from './routes/api/external/officehub/monitoring-state'
 import { Route as ApiPublicAgentConfigRouteImport } from './routes/api/public/agent/config'
 import { Route as ApiPublicAgentDownloadRouteImport } from './routes/api/public/agent/download'
@@ -111,6 +112,12 @@ const AuthenticatedSettingsUsersRoute =
     path: '/users',
     getParentRoute: () => AuthenticatedSettingsRoute,
   } as any)
+const ApiExternalOfficehubFaceVerificationAlertRoute =
+  ApiExternalOfficehubFaceVerificationAlertRouteImport.update({
+    id: '/api/external/officehub/face-verification-alert',
+    path: '/api/external/officehub/face-verification-alert',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiExternalOfficehubMonitoringStateRoute =
   ApiExternalOfficehubMonitoringStateRouteImport.update({
     id: '/api/external/officehub/monitoring-state',
@@ -163,6 +170,7 @@ export interface FileRoutesByFullPath {
   '/settings/reports': typeof AuthenticatedSettingsReportsRoute
   '/settings/users': typeof AuthenticatedSettingsUsersRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/api/external/officehub/face-verification-alert': typeof ApiExternalOfficehubFaceVerificationAlertRoute
   '/api/external/officehub/monitoring-state': typeof ApiExternalOfficehubMonitoringStateRoute
   '/api/public/agent/config': typeof ApiPublicAgentConfigRoute
   '/api/public/agent/download': typeof ApiPublicAgentDownloadRoute
@@ -185,6 +193,7 @@ export interface FileRoutesByTo {
   '/settings/reports': typeof AuthenticatedSettingsReportsRoute
   '/settings/users': typeof AuthenticatedSettingsUsersRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
+  '/api/external/officehub/face-verification-alert': typeof ApiExternalOfficehubFaceVerificationAlertRoute
   '/api/external/officehub/monitoring-state': typeof ApiExternalOfficehubMonitoringStateRoute
   '/api/public/agent/config': typeof ApiPublicAgentConfigRoute
   '/api/public/agent/download': typeof ApiPublicAgentDownloadRoute
@@ -210,6 +219,7 @@ export interface FileRoutesById {
   '/_authenticated/settings/reports': typeof AuthenticatedSettingsReportsRoute
   '/_authenticated/settings/users': typeof AuthenticatedSettingsUsersRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/api/external/officehub/face-verification-alert': typeof ApiExternalOfficehubFaceVerificationAlertRoute
   '/api/external/officehub/monitoring-state': typeof ApiExternalOfficehubMonitoringStateRoute
   '/api/public/agent/config': typeof ApiPublicAgentConfigRoute
   '/api/public/agent/download': typeof ApiPublicAgentDownloadRoute
@@ -235,6 +245,7 @@ export interface FileRouteTypes {
     | '/settings/reports'
     | '/settings/users'
     | '/settings/'
+    | '/api/external/officehub/face-verification-alert'
     | '/api/external/officehub/monitoring-state'
     | '/api/public/agent/config'
     | '/api/public/agent/download'
@@ -257,6 +268,7 @@ export interface FileRouteTypes {
     | '/settings/reports'
     | '/settings/users'
     | '/settings'
+    | '/api/external/officehub/face-verification-alert'
     | '/api/external/officehub/monitoring-state'
     | '/api/public/agent/config'
     | '/api/public/agent/download'
@@ -281,6 +293,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/reports'
     | '/_authenticated/settings/users'
     | '/_authenticated/settings/'
+    | '/api/external/officehub/face-verification-alert'
     | '/api/external/officehub/monitoring-state'
     | '/api/public/agent/config'
     | '/api/public/agent/download'
@@ -295,6 +308,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   OnboardingRoute: typeof OnboardingRoute
+  ApiExternalOfficehubFaceVerificationAlertRoute: typeof ApiExternalOfficehubFaceVerificationAlertRoute
   ApiExternalOfficehubMonitoringStateRoute: typeof ApiExternalOfficehubMonitoringStateRoute
   ApiPublicAgentConfigRoute: typeof ApiPublicAgentConfigRoute
   ApiPublicAgentDownloadRoute: typeof ApiPublicAgentDownloadRoute
@@ -411,6 +425,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsUsersRouteImport
       parentRoute: typeof AuthenticatedSettingsRoute
     }
+    '/api/external/officehub/face-verification-alert': {
+      id: '/api/external/officehub/face-verification-alert'
+      path: '/api/external/officehub/face-verification-alert'
+      fullPath: '/api/external/officehub/face-verification-alert'
+      preLoaderRoute: typeof ApiExternalOfficehubFaceVerificationAlertRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/external/officehub/monitoring-state': {
       id: '/api/external/officehub/monitoring-state'
       path: '/api/external/officehub/monitoring-state'
@@ -510,6 +531,8 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   OnboardingRoute: OnboardingRoute,
+  ApiExternalOfficehubFaceVerificationAlertRoute:
+    ApiExternalOfficehubFaceVerificationAlertRoute,
   ApiExternalOfficehubMonitoringStateRoute:
     ApiExternalOfficehubMonitoringStateRoute,
   ApiPublicAgentConfigRoute: ApiPublicAgentConfigRoute,

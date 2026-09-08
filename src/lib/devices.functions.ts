@@ -29,8 +29,17 @@ export const listDevices = createServerFn({ method: "GET" })
         const schedule = await getEffectiveSchedule(context.supabase, orgId, d.profile_id);
         const inShift = isWithinShift(schedule);
 
-        // State is "active" when agent is online and sending periodic heartbeats
-        const state = isOnline ? (inShift ? "active" : "off_shift") : "offline";
+        let state = d.monitoring_state;
+        
+        if (d.status === "paused") {
+          state = "paused";
+        } else if (d.status === "revoked") {
+          state = "offline";
+        } else if (d.monitoring_state === "paused") {
+          state = "paused";
+        } else {
+          state = isOnline ? (inShift ? "active" : "off_shift") : "offline";
+        }
 
         if (d.monitoring_state !== state) {
           await context.supabase
