@@ -56,7 +56,7 @@ function UsersPage() {
   } | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const [addForm, setAddForm] = useState({ full_name: "", email: "", job_role: "", department_id: "" });
+  const [addForm, setAddForm] = useState({ full_name: "", email: "", job_role: "", department_id: "", external_id: "" });
   const [editForm, setEditForm] = useState({ full_name: "", job_role: "", department_id: "", status: "active" as any });
 
   const availableDepartments = orgData?.departments ?? Array.from(
@@ -94,22 +94,27 @@ function UsersPage() {
         data: {
           ...addForm,
           department_id: addForm.department_id || null,
+          external_id: addForm.external_id || undefined,
           shift: {
             timezone: orgData?.timezone ?? "Asia/Kolkata",
             days: Array.from({ length: 7 }, (_, day_of_week) => ({
               day_of_week,
               enabled: true,
-              start_time: "00:00",
-              end_time: "23:59",
+              start_time: "09:00",
+              end_time: "18:00",
             })),
           },
         },
       });
-      if (res.emailSent === false) {
-        toast.warning(`User added, but email failed to send.`);
+      if (res.error) {
+        toast.error(res.error);
       } else {
-        toast.success("User added & onboarding email automatically sent! (Check spam folder)");
+        toast.success("User invited", {
+          description: "An onboarding email has been sent.",
+        });
       }
+      setAddForm({ full_name: "", email: "", job_role: "", department_id: "", external_id: "" });
+      invalidate();
       setAddOpen(false);
       if (res.invitationToken) {
         setCreatedInvite({
@@ -349,6 +354,16 @@ function UsersPage() {
                 value={addForm.job_role}
                 onChange={(e) => setAddForm({ ...addForm, job_role: e.target.value })}
                 placeholder="Product Designer"
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">OfficeHub Employee ID (Optional)</label>
+              <input
+                type="text"
+                value={addForm.external_id}
+                onChange={(e) => setAddForm({ ...addForm, external_id: e.target.value })}
+                placeholder="EMP015"
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary"
               />
             </div>

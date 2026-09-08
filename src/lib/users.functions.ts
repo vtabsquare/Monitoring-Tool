@@ -58,6 +58,7 @@ export const addUser = createServerFn({ method: "POST" })
         email: z.string().email(),
         department_id: z.string().uuid().nullable(),
         job_role: z.string().max(120).optional(),
+        external_id: z.string().max(200).optional(),
         shift: shiftSchema,
       })
       .parse(data),
@@ -72,6 +73,7 @@ export const addUser = createServerFn({ method: "POST" })
         email: data.email.toLowerCase(),
         full_name: data.full_name,
         job_role: data.job_role ?? null,
+        external_id: data.external_id || null,
         status: "invited",
       })
       .select("id")
