@@ -152,6 +152,14 @@ function AuthPage() {
             </button>
           </p>
         </div>
+        <a
+          href="https://www.vtabsquare.com/?demo=1&product=employee-productivity-monitoring&source=monitoring-tool-demo"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-5 block text-center text-sm font-semibold text-primary underline underline-offset-4 hover:opacity-80"
+        >
+          Contact for Demo ↗
+        </a>
       </div>
     </div>
   );
